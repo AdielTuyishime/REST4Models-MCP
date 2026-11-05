@@ -1,0 +1,253 @@
+/*
+ * ============================================================
+ * SysML Model Complexity Helpers
+ * ============================================================
+ *
+ * Purpose:
+ * This file defines helper operations used to compute the
+ * complexity of a SysML v2 model.
+ *
+ * Main idea:
+ * - navigate the model safely
+ * - retrieve semantic child elements
+ * - traverse the model recursively
+ * - compute size, relationship, and depth metrics
+ *
+ * These helpers are later used by EGL to generate the final
+ * JSON output of the complexity analysis.
+ */
+
+
+/*
+ * Return the owned relationships of the current element safely.
+ *
+ * Why needed:
+ * In SysML v2 XMI, semantic containment is typically expressed
+ * through "ownedRelationship". This helper avoids errors when
+ * that property is absent or undefined.
+ *
+ * Returns:
+ * - the collection of owned relationships, if present
+ * - otherwise an empty sequence
+ */
+operation Any ownedRelationshipsSafe() {
+    if (self.hasProperty("ownedRelationship") and not self.ownedRelationship.isUndefined()) {
+        return self.ownedRelationship;
+    }
+    return Sequence{};
+}
+
+/*
+ * Return the owned related elements of a relationship safely.
+ *
+ * Why needed:
+ * A relationship may contain one or multiple semantic elements
+ * through "ownedRelatedElement". This helper normalizes the result
+ * so that the caller always gets a sequence.
+ *
+ * Returns:
+ * - the collection of related elements if already a collection
+ * - a one-element sequence if there is only one related element
+ * - an empty sequence otherwise
+ */
+operation Any relatedElementsSafe() {
+    if (self.hasProperty("ownedRelatedElement") and not self.ownedRelatedElement.isUndefined()) {
+        if (self.ownedRelatedElement.isKindOf(Collection)) {
+            return self.ownedRelatedElement;
+        }
+        return Sequence { self.ownedRelatedElement };
+    }
+    return Sequence{};
+}
+
+/*
+ * Return the direct semantic children of the current element.
+ *
+ * Logic:
+ * - iterate over all owned relationships
+ * - retrieve the related semantic elements of each relationship
+ * - collect them into one sequence
+ *
+ * This operation represents the direct semantic containment view
+ * of the model.
+ */
+operation Any directOwnedElements() {
+    var result = Sequence{};
+    for (rel in self.ownedRelationshipsSafe()) {
+        for (elem in rel.relatedElementsSafe()) {
+            result.add(elem);
+        }
+    }
+    return result;
+}
+
+/*
+ * Return the root Namespace elements of the model.
+ *
+ * Logic:
+ * - select all Namespace instances
+ * - keep only those that do not have an owner
+ *
+ * These are considered entry points for traversing the model.
+ */
+operation getNamespaces() {
+    return SysML!Namespace.all.select(n |
+        (not n.hasProperty("owner")) or n.owner.isUndefined()
+    );
+}
+
+/*
+ * Return all recursively owned semantic elements below the current element.
+ *
+ * Logic:
+ * - retrieve direct semantic children
+ * - add each child to the result
+ * - recursively collect the child's descendants
+ * - avoid duplicates
+ *
+ * This is used to compute global size-based metrics.
+ */
+operation Any allOwnedElementsRecursively() {
+    var result = Sequence{};
+    for (c in self.directOwnedElements()) {
+        if (not result.includes(c)) {
+            result.add(c);
+        }
+        for (x in c.allOwnedElementsRecursively()) {
+            if (not result.includes(x)) {
+                result.add(x);
+            }
+        }
+    }
+    return result;
+}
+
+/*
+ * Count all relationship objects recursively below the current element.
+ *
+ * Logic:
+ * - count the relationships directly owned by the current element
+ * - recursively add the relationship counts of all semantic children
+ *
+ * This gives an estimate of how much structural linkage exists in the model.
+ */
+operation Any totalRelationshipsRecursively() : Integer {
+    var total = self.ownedRelationshipsSafe().size();
+    for (c in self.directOwnedElements()) {
+        total = total + c.totalRelationshipsRecursively();
+    }
+    return total;
+}
+
+/*
+ * Compute the maximum semantic nesting depth below the current element.
+ *
+ * Logic:
+ * - if the element has no semantic children, its depth is 1
+ * - otherwise compute the depth of each child
+ * - keep the maximum child depth
+ * - add 1 for the current element itself
+ *
+ * This metric captures the hierarchical complexity of the model.
+ */
+operation Any maxDepth() : Integer {
+    var children = self.directOwnedElements();
+    if (children.isEmpty()) {
+        return 1;
+    }
+
+    var localMax = 0;
+    for (c in children) {
+        var d = c.maxDepth();
+        if (d > localMax) {
+            localMax = d;
+        }
+    }
+    return localMax + 1;
+}
+
+/*
+ * Return the total number of root namespaces.
+ *
+ * This is a basic metric indicating how many top-level
+ * namespace entry points the model contains.
+ */
+operation overallNamespaceCount() : Integer {
+    return getNamespaces().size();
+}
+
+/*
+ * Return the total number of semantic elements in the whole model.
+ *
+ * Logic:
+ * - start from each root namespace
+ * - count the namespace itself (+1)
+ * - add all recursively owned semantic elements below it
+ *
+ * This metric reflects the overall size of the SysML model.
+ */
+operation overallTotalSemanticElements() : Integer {
+    var total = 0;
+    for (n in getNamespaces()) {
+        total = total + 1 + n.allOwnedElementsRecursively().size();
+    }
+    return total;
+}
+
+/*
+ * Return the total number of relationship objects in the whole model.
+ *
+ * Logic:
+ * - start from each root namespace
+ * - recursively count all owned relationships
+ *
+ * This metric reflects the degree of structural connectivity
+ * and organization of the model.
+ */
+operation overallRelationshipCount() : Integer {
+    var total = 0;
+    for (n in getNamespaces()) {
+        total = total + n.totalRelationshipsRecursively();
+    }
+    return total;
+}
+
+/*
+ * Return the maximum semantic depth of the whole model.
+ *
+ * Logic:
+ * - compute the depth of each root namespace
+ * - return the largest value
+ *
+ * This represents the deepest nesting level present in the model.
+ */
+operation overallMaxModelDepth() : Integer {
+    var localMax = 0;
+    for (n in getNamespaces()) {
+        var d = n.maxDepth();
+        if (d > localMax) {
+            localMax = d;
+        }
+    }
+    return localMax;
+}
+
+/*
+ * Compute the overall complexity score of the model.
+ *
+ * Current formula:
+ * complexityScore =
+ *   total semantic elements
+ * + total relationship objects
+ * + maximum model depth
+ *
+ * Interpretation:
+ * - total semantic elements capture model size
+ * - relationship count captures structural richness
+ * - maximum depth captures hierarchical complexity
+ *
+ * This is a first simple aggregate complexity indicator.
+ */
+operation overallComplexityScore() : Integer {
+    return overallTotalSemanticElements() + overallRelationshipCount() + overallMaxModelDepth();
+}

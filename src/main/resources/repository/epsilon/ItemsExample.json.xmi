@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="ASCII"?>
+<json:Object xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:json="http://www.bamol.pt/json/Json" xsi:schemaLocation="http://www.bamol.pt/json/Json ../../../../../target/classes/repository/Json.ecore">
+  <members key="type">
+    <value xsi:type="json:StringVal" stringValue="Namespace"/>
+  </members>
+  <members key="name">
+    <value xsi:type="json:StringVal" stringValue=""/>
+  </members>
+  <members key="elementId">
+    <value xsi:type="json:StringVal" stringValue="f3502500-ce84-4281-beb7-f1cdb272b692"/>
+  </members>
+  <members key="packages">
+    <value xsi:type="json:Array">
+      <values xsi:type="json:Object">
+        <members key="type">
+          <value xsi:type="json:StringVal" stringValue="Package"/>
+        </members>
+        <members key="name">
+          <value xsi:type="json:StringVal" stringValue="Items Example"/>
+        </members>
+        <members key="elementId">
+          <value xsi:type="json:StringVal" stringValue="8bca6c03-a448-4b23-86d0-98a1ce665863"/>
+        </members>
+      </values>
+    </value>
+  </members>
+  <members key="elements">
+    <value xsi:type="json:Array">
+      <values xsi:type="json:Object">
+        <members key="type">
+          <value xsi:type="json:StringVal" stringValue="ReferenceUsage"/>
+        </members>
+        <members key="name">
+          <value xsi:type="json:StringVal" stringValue="ScalarValues"/>
+        </members>
+        <members key="elementId">
+          <value xsi:type="json:StringVal" stringValue="be4a6fee-5aea-4c89-b82d-8acacaa74eae"/>
+        </members>
+      </values>
+      <values xsi:type="json:Object">
+        <members key="type">
+          <value xsi:type="json:StringVal" stringValue="ItemDefinition"/>
+        </members>
+        <members key="name">
+          <value xsi:type="json:StringVal" stringValue="Fuel"/>
+        </members>
+        <members key="elementId">
+          <value xsi:type="json:StringVal" stringValue="9554d847-5b52-4420-b9b0-4a96387cfd2a"/>
+        </members>
+      </values>
+      <values xsi:type="json:Object">
+        <members key="type">
+          <value xsi:type="json:StringVal" stringValue="ItemDefinition"/>
+        </members>
+        <members key="name">
+          <value xsi:type="json:StringVal" stringValue="Person"/>
+        </members>
+        <members key="elementId">
+          <value xsi:type="json:StringVal" stringValue="758f4ab3-9b95-42ce-bbe6-eceac9ff342c"/>
+        </members>
+      </values>
+      <values xsi:type="json:Object">
+        <members key="type">
+          <value xsi:type="json:StringVal" stringValue="PartDefinition"/>
+        </members>
+        <members key="name">
+          <value xsi:type="json:StringVal" stringValue="Vehicle"/>
+        </members>
+        <members key="elementId">
+          <value xsi:type="json:StringVal" stringValue="73dc1755-11f0-4200-a184-eebfe7cf2b4c"/>
+        </members>
+        <members key="features">
+          <value xsi:type="json:Array">
+            <values xsi:type="json:Object">
+              <members key="type">
+                <value xsi:type="json:StringVal" stringValue="AttributeUsage"/>
+              </members>
+              <members key="name">
+                <value xsi:type="json:StringVal" stringValue="mass"/>
+              </members>
+              <members key="elementId">
+                <value xsi:type="json:StringVal" stringValue="d431ce89-326b-448f-90c8-026355b8898d"/>
+              </members>
+              <members key="isComposite">
+                <value xsi:type="json:BooleanVal"/>
+              </members>
+              <members key="typeRefName">
+                <value xsi:type="json:StringVal" stringValue=""/>
+              </members>
+              <members key="typeRefId">
+                <value xsi:type="json:StringVal" stringValue=""/>
+              </members>
+              <members key="typeRefUri">
+                <value xsi:type="json:StringVal" stringValue="file:/C:/Users/adiel_o0s7k4z/OneDrive/Documents/MATISSE/REST4Models1.0/REST4Models1.0/src/main/resources/repository/Items%20Example.sysml#|0"/>
+              </members>
+            </values>
+            <values xsi:type="json:Object">
+              <members key="type">
+                <value xsi:type="json:StringVal" stringValue="ItemUsage"/>
+              </members>
+              <members key="name">
+                <value xsi:type="json:StringVal" stringValue="driver"/>
+              </members>
+              <members key="elementId">
+                <value xsi:type="json:StringVal" stringValue="62541384-daac-43f8-9ba9-7aebc9e44fcb"/>
+              </members>
+              <members key="typeRefName">
+                <value xsi:type="json:StringVal" stringValue="Person"/>
+              </members>
+              <members key="typeRefId">
+                <value xsi:type="json:StringVal" stringValue="758f4ab3-9b95-42ce-bbe6-eceac9ff342c"/>
+              </members>
+              <members key="typeRefUri">
+                <value xsi:type="json:StringVal" stringValue=""/>
+              </members>
+            </values>
+            <values xsi:type="json:Object">
+              <members key="type">
+                <value xsi:type="json:StringVal" stringValue="PartUsage"/>
+              </members>
+              <members key="name">
+                <value xsi:type="json:StringVal" stringValue="fuelTank"/>
+              </members>
+              <members key="elementId">
+                <value xsi:type="json:StringVal" stringValue="8f9c09e7-987e-49a5-9301-d4a4e058f82c"/>
+              </members>
+              <members key="features">
+                <value xsi:type="json:Array">
+                  <values xsi:type="json:Object">
+                    <members key="type">
+                      <value xsi:type="json:StringVal" stringValue="ItemUsage"/>
+                    </members>
+                    <members key="name">
+                      <value xsi:type="json:StringVal" stringValue="fuel"/>
+                    </members>
+                    <members key="elementId">
+                      <value xsi:type="json:StringVal" stringValue="dbe73f6b-7f72-47a2-9e66-2a918044f3d9"/>
+                    </members>
+                    <members key="typeRefName">
+                      <value xsi:type="json:StringVal" stringValue="Fuel"/>
+                    </members>
+                    <members key="typeRefId">
+                      <value xsi:type="json:StringVal" stringValue="9554d847-5b52-4420-b9b0-4a96387cfd2a"/>
+                    </members>
+                    <members key="typeRefUri">
+                      <value xsi:type="json:StringVal" stringValue=""/>
+                    </members>
+                  </values>
+                </value>
+              </members>
+            </values>
+          </value>
+        </members>
+      </values>
+    </value>
+  </members>
+</json:Object>

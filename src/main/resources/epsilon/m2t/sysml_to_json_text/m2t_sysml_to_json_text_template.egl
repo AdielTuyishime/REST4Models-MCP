@@ -1,0 +1,238 @@
+[%import "m2t_sysml_to_json_text_helpers.eol";%]
+[% 
+   var namespaces = getNamespaces(); 
+%]
+{
+  "namespaces": [
+[% 
+   var firstNamespace = true;
+   for (ns in namespaces) {
+      if (not firstNamespace) { %],[% }
+      firstNamespace = false;
+%]
+    {
+      "type": [%= ns.jsonType().toJsonString() %],
+      "elementId": [%= ns.safeElementId().toJsonString() %],
+      "packages": [
+[%     
+       var firstPackage = true;
+       for (pkg in ns.topLevelPackages()) {
+          if (not firstPackage) { %],[% }
+          firstPackage = false;
+%]
+        {
+          "type": [%= pkg.jsonType().toJsonString() %],
+          "elementId": [%= pkg.safeElementId().toJsonString() %],
+          "name": [%= pkg.safeDeclaredName().toJsonString() %]
+        }
+[%     } %]
+      ],
+      "referenceUsages": [
+[%     
+       var firstReference = true;
+       for (ref in ns.topLevelReferenceUsages()) {
+          if (not firstReference) { %],[% }
+          firstReference = false;
+%]
+        {
+          "type": [%= ref.jsonType().toJsonString() %],
+          "elementId": [%= ref.safeElementId().toJsonString() %],
+          "name": [%= ref.safeDeclaredName().toJsonString() %],
+          "isComposite": [%= ref.safeIsComposite() %],
+          "direction": [%= ref.safeDirection().toJsonString() %]
+        }
+[%     } %]
+      ],
+      "itemDefinitions": [
+[%     
+       var firstItemDefinition = true;
+       for (itemDef in ns.topLevelItemDefinitions()) {
+          if (not firstItemDefinition) { %],[% }
+          firstItemDefinition = false;
+%]
+        {
+          "type": [%= itemDef.jsonType().toJsonString() %],
+          "elementId": [%= itemDef.safeElementId().toJsonString() %],
+          "name": [%= itemDef.safeDeclaredName().toJsonString() %]
+        }
+[%     } %]
+      ],
+      "partDefinitions": [
+[%     
+       var firstPartDefinition = true;
+       for (part in ns.topLevelPartDefinitions()) {
+          if (not firstPartDefinition) { %],[% }
+          firstPartDefinition = false;
+          var features = part.exportedFeatures();
+%]
+        {
+          "type": [%= part.jsonType().toJsonString() %],
+          "elementId": [%= part.safeElementId().toJsonString() %],
+          "name": [%= part.safeDeclaredName().toJsonString() %],
+          "features": [
+[%         
+           var firstFeature = true;
+           for (feature in features) {
+              if (not firstFeature) { %],[% }
+              firstFeature = false;
+              var nestedFeatures = feature.exportedFeatures();
+%]
+            {
+              "type": [%= feature.jsonType().toJsonString() %],
+              "elementId": [%= feature.safeElementId().toJsonString() %],
+              "name": [%= feature.safeDeclaredName().toJsonString() %],
+              "isComposite": [%= feature.safeIsComposite() %],
+              "direction": [%= feature.safeDirection().toJsonString() %],
+              "typeRef": {
+                "name": [%= feature.simpleTypeRefName().toJsonString() %],
+                "elementId": [%= feature.simpleTypeRefId().toJsonString() %],
+                "proxyUri": [%= feature.simpleTypeRefUri().toJsonString() %]
+              },
+              "multiplicity": [
+[%             
+               var firstMult = true;
+               for (m in feature.multiplicities()) {
+                  if (not firstMult) { %],[% }
+                  firstMult = false;
+%]
+                {
+                  "type": [%= m.jsonType().toJsonString() %],
+                  "elementId": [%= m.safeElementId().toJsonString() %]
+                }
+[%             } %]
+              ],
+              "features": [
+[%             
+               var firstNested = true;
+               for (nested in nestedFeatures) {
+                  if (not firstNested) { %],[% }
+                  firstNested = false;
+%]
+                {
+                  "type": [%= nested.jsonType().toJsonString() %],
+                  "elementId": [%= nested.safeElementId().toJsonString() %],
+                  "name": [%= nested.safeDeclaredName().toJsonString() %],
+                  "isComposite": [%= nested.safeIsComposite() %],
+                  "direction": [%= nested.safeDirection().toJsonString() %],
+                  "typeRef": {
+                    "name": [%= nested.simpleTypeRefName().toJsonString() %],
+                    "elementId": [%= nested.simpleTypeRefId().toJsonString() %],
+                    "proxyUri": [%= nested.simpleTypeRefUri().toJsonString() %]
+                  },
+                  "multiplicity": [
+[%                 
+                   var firstNestedMult = true;
+                   for (nm in nested.multiplicities()) {
+                      if (not firstNestedMult) { %],[% }
+                      firstNestedMult = false;
+%]
+                    {
+                      "type": [%= nm.jsonType().toJsonString() %],
+                      "elementId": [%= nm.safeElementId().toJsonString() %]
+                    }
+[%                 } %]
+                  ]
+                }
+[%             } %]
+              ]
+            }
+[%         } %]
+          ]
+        }
+[%     } %]
+      ],
+      "attributeDefinitions": [
+[%     
+       var firstAttributeDefinition = true;
+       for (attr in ns.topLevelAttributeDefinitions()) {
+          if (not firstAttributeDefinition) { %],[% }
+          firstAttributeDefinition = false;
+          var features = attr.exportedFeatures();
+%]
+        {
+          "type": [%= attr.jsonType().toJsonString() %],
+          "elementId": [%= attr.safeElementId().toJsonString() %],
+          "name": [%= attr.safeDeclaredName().toJsonString() %],
+
+          "features": [
+[%         
+           var firstFeature = true;
+           for (feature in features) {
+              if (not firstFeature) { %],[% }
+              firstFeature = false;
+
+              var nestedFeatures = feature.exportedFeatures();
+%]
+            {
+              "type": [%= feature.jsonType().toJsonString() %],
+              "elementId": [%= feature.safeElementId().toJsonString() %],
+              "name": [%= feature.safeDeclaredName().toJsonString() %],
+              "isComposite": [%= feature.safeIsComposite() %],
+              "direction": [%= feature.safeDirection().toJsonString() %],
+
+              "typeRef": {
+                "name": [%= feature.simpleTypeRefName().toJsonString() %],
+                "elementId": [%= feature.simpleTypeRefId().toJsonString() %],
+                "proxyUri": [%= feature.simpleTypeRefUri().toJsonString() %]
+              },
+
+              "multiplicity": [
+[%             
+               var firstMult = true;
+               for (m in feature.multiplicities()) {
+                  if (not firstMult) { %],[% }
+                  firstMult = false;
+%]
+                {
+                  "type": [%= m.jsonType().toJsonString() %],
+                  "elementId": [%= m.safeElementId().toJsonString() %]
+                }
+[%             } %]
+              ],
+
+              "features": [
+[%             
+               var firstNested = true;
+               for (nested in nestedFeatures) {
+                  if (not firstNested) { %],[% }
+                  firstNested = false;
+%]
+                {
+                  "type": [%= nested.jsonType().toJsonString() %],
+                  "elementId": [%= nested.safeElementId().toJsonString() %],
+                  "name": [%= nested.safeDeclaredName().toJsonString() %],
+                  "isComposite": [%= nested.safeIsComposite() %],
+                  "direction": [%= nested.safeDirection().toJsonString() %],
+
+                  "typeRef": {
+                    "name": [%= nested.simpleTypeRefName().toJsonString() %],
+                    "elementId": [%= nested.simpleTypeRefId().toJsonString() %],
+                    "proxyUri": [%= nested.simpleTypeRefUri().toJsonString() %]
+                  },
+
+                  "multiplicity": [
+[%                 
+                   var firstNestedMult = true;
+                   for (nm in nested.multiplicities()) {
+                      if (not firstNestedMult) { %],[% }
+                      firstNestedMult = false;
+%]
+                    {
+                      "type": [%= nm.jsonType().toJsonString() %],
+                      "elementId": [%= nm.safeElementId().toJsonString() %]
+                    }
+[%                 } %]
+                  ]
+                }
+[%             } %]
+              ]
+            }
+[%         } %]
+          ]
+        }
+[%     } %]
+      ]
+    }
+[% } %]
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "$schema": "https://mde-workbench.org/schema/capability-descriptor/v1.0.0",
+  "capability_id": "xmi_to_json_jackson",
+  "provider": {
+    "id": "rest4models",
+    "title": "REST4Models",
+    "version": "0.11.0"
+  },
+  "category": "model_to_text",
+  "technical_space": "emf/xmi",
+  "description": "Generic XMI to JSON serialization using Java Jackson. Works on any EMF model regardless of its metamodel. Performs a technological space bridge from modelware (XMI/EMF) to JSONware. The output JSON mirrors the EMF containment structure. Use this as a universal serializer or as step 1 in a pipeline where the JSON will be further processed.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "model": {
+        "type": "string",
+        "description": "Source model filename in the repository (any EMF .xmi)"
+      },
+      "metamodel": {
+        "type": "string",
+        "description": "Source metamodel name. Any metamodel is accepted."
+      },
+      "output": {
+        "type": "string",
+        "description": "Output filename. If omitted, auto-generated based on the input."
+      }
+    },
+    "required": [
+      "model",
+      "metamodel"
+    ]
+  },
+  "output": {
+    "form": "json",
+    "format": ".json (EMF-mirrored JSON structure)",
+    "description": "A JSON serialization mirroring the EMF containment structure of the source model."
+  },
+  "chainable_with": [],
+  "binding": {
+    "tool": "model_to_text",
+    "static_args": {
+      "capability_id": "xmi_to_json_jackson"
+    }
+  }
+}

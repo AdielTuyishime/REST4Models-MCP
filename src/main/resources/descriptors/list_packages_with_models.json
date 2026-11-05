@@ -1,0 +1,24 @@
+{
+  "$schema": "https://mde-workbench.org/schema/capability-descriptor/v1.0.0",
+  "capability_id": "list_packages_with_models",
+  "provider": {
+    "id": "rest4models",
+    "title": "REST4Models",
+    "version": "0.11.0"
+  },
+  "category": "navigation_query",
+  "description": "Lists registered EPackages grouped with their associated XMI model files. No preconditions and no side effects.",
+  "input_schema": {
+    "type": "object"
+  },
+  "output": {
+    "form": "report",
+    "description": "EPackages grouped with their associated XMI model files."
+  },
+  "binding": {
+    "tool": "navigation_query",
+    "static_args": {
+      "capability_id": "list_packages_with_models"
+    }
+  }
+}

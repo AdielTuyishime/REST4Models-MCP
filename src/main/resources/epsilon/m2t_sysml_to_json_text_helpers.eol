@@ -1,0 +1,393 @@
+/*
+ * Escape characters that would break JSON strings.
+ * Example:
+ * if a SysML declaredName contained quotes or line breaks,
+ * this makes it safe before writing it into JSON.
+ */
+operation Any jsonEscape() : String {
+    if (self.isUndefined()) return "";
+
+    var s = self.asString();
+    s = s.replace("\"", "\\\"");
+    s = s.replace("\n", "\\n");
+    s = s.replace("\r", "\\r");
+    s = s.replace("\t", "\\t");
+
+    return s;
+}
+
+/*
+ * Convert any value into a JSON string.
+ * Example:
+ * Vehicle  -> "Vehicle"
+ * Fuel     -> "Fuel"
+ * Undefined -> null
+ */
+operation Any toJsonString() : String {
+    if (self.isUndefined()) return "null";
+    return "\"" + self.jsonEscape() + "\"";
+}
+
+/*
+ * Convert boolean-like values into JSON boolean text.
+ * Example:
+ * true  -> true
+ * false -> false
+ *
+ * Used for fields such as isComposite on:
+ * - fuelTank (PartUsage, true)
+ * - driver   (ItemUsage / usage, often false or null depending on the model)
+ */
+operation Any boolToJson() : String {
+    if (self.isUndefined()) return "null";
+    return self.asString().toLowerCase();
+}
+
+/*
+ * Return the best available readable name for an element.
+ *
+ * In your SysML example:
+ * - PartDefinition "Vehicle"      -> Vehicle
+ * - PartUsage "fuelTank"          -> fuelTank
+ * - ItemUsage "fuel"              -> fuel
+ * - ItemDefinition "Fuel"         -> Fuel
+ *
+ * First tries declaredName, then falls back to name.
+ */
+operation Any safeDeclaredName() : String {
+    if (self.hasProperty("declaredName") and not self.declaredName.isUndefined()) {
+        return self.declaredName;
+    }
+    if (self.hasProperty("name") and not self.name.isUndefined()) {
+        return self.name;
+    }
+    return "";
+}
+
+/*
+ * Return the SysML elementId if present.
+ *
+ * Example:
+ * Vehicle, fuelTank, driver, Fuel, Person, etc.
+ * all have elementId values in the XMI.
+ */
+operation Any safeElementId() : String {
+    if (self.hasProperty("elementId") and not self.elementId.isUndefined()) {
+        return self.elementId;
+    }
+    return "";
+}
+
+/*
+ * Return isComposite as JSON text if available.
+ *
+ * In your example:
+ * - fuelTank is composite -> true
+ * - mass is not composite -> false
+ * - some elements may not define it -> null
+ */
+operation Any safeIsComposite() : String {
+    if (self.hasProperty("isComposite") and not self.isComposite.isUndefined()) {
+        return self.isComposite.boolToJson();
+    }
+    return "null";
+}
+
+/*
+ * Return direction if present.
+ *
+ * This is useful for usages/references in SysML.
+ * In your current example this may be empty for many elements,
+ * but the helper is kept because other SysML files may define it.
+ */
+operation Any safeDirection() : String {
+    if (self.hasProperty("direction") and not self.direction.isUndefined()) {
+        return self.direction.asString();
+    }
+    return "";
+}
+
+/*
+ * Return the EMF metaclass name.
+ *
+ * In your example this gives values such as:
+ * - Namespace
+ * - Package
+ * - PartDefinition
+ * - PartUsage
+ * - AttributeUsage
+ * - ItemDefinition
+ * - ItemUsage
+ * - Multiplicity
+ */
+operation Any jsonType() : String {
+    return self.eClass().name;
+}
+
+/*
+ * Get only real root Namespace elements.
+ *
+ * In your SysML file, the root is:
+ * <sysml:Namespace ...>
+ *
+ * This prevents wrongly exporting nested elements such as:
+ * - Vehicle
+ * - Fuel
+ * - fuelTank
+ * - driver
+ * as if they were root namespaces.
+ */
+operation getNamespaces() {
+    return SysML!Namespace.all.select(n |
+        (not n.hasProperty("owner")) or n.owner.isUndefined()
+    );
+}
+
+/*
+ * Safely get ownedRelationship from any SysML element.
+ *
+ * Example:
+ * - Namespace owns top-level elements through ownedRelationship
+ * - Vehicle owns mass, driver, fuelTank through ownedRelationship
+ * - fuelTank owns fuel through ownedRelationship
+ */
+operation Any ownedRelationshipsSafe() {
+    if (self.hasProperty("ownedRelationship") and not self.ownedRelationship.isUndefined()) {
+        return self.ownedRelationship;
+    }
+    return Sequence{};
+}
+
+/*
+ * From a relationship, extract the actual semantic child element(s)
+ * stored in ownedRelatedElement.
+ *
+ * Example:
+ * Namespace
+ *   -> OwningMembership
+ *      -> ownedRelatedElement = Vehicle
+ *
+ * Vehicle
+ *   -> FeatureMembership
+ *      -> ownedRelatedElement = mass
+ *
+ * fuelTank
+ *   -> FeatureMembership
+ *      -> ownedRelatedElement = fuel
+ */
+operation Any relatedElementsSafe() {
+    if (self.hasProperty("ownedRelatedElement") and not self.ownedRelatedElement.isUndefined()) {
+        if (self.ownedRelatedElement.isKindOf(Collection)) {
+            return self.ownedRelatedElement;
+        }
+        return Sequence { self.ownedRelatedElement };
+    }
+    return Sequence{};
+}
+
+/*
+ * Generic traversal helper:
+ * follow ownedRelationship -> ownedRelatedElement
+ * and collect the real child elements.
+ *
+ * This is the key helper that lets us move through your model:
+ *
+ * Namespace -> Package / Vehicle / Fuel / Person
+ * Vehicle   -> mass / driver / fuelTank
+ * fuelTank  -> fuel
+ */
+operation Any directOwnedElements() {
+    var result = Sequence{};
+    for (rel in self.ownedRelationshipsSafe()) {
+        for (elem in rel.relatedElementsSafe()) {
+            result.add(elem);
+        }
+    }
+    return result;
+}
+
+/*
+ * Top-level semantic elements directly under the root Namespace.
+ *
+ * In your example, this includes elements such as:
+ * - Package
+ * - ReferenceUsage
+ * - ItemDefinition Fuel
+ * - ItemDefinition Person
+ * - PartDefinition Vehicle
+ */
+operation SysML!Namespace topLevelOwnedElements() {
+    return self.directOwnedElements();
+}
+
+/*
+ * Return top-level Package elements.
+ *
+ * Example:
+ * The package "Items Example"
+ */
+operation SysML!Namespace topLevelPackages() {
+    return self.topLevelOwnedElements().select(e | e.isKindOf(SysML!Package));
+}
+
+/*
+ * Return top-level ReferenceUsage elements.
+ *
+ * Example:
+ * ScalarValues
+ */
+operation SysML!Namespace topLevelReferenceUsages() {
+    return self.topLevelOwnedElements().select(e | e.isKindOf(SysML!ReferenceUsage));
+}
+
+/*
+ * Return top-level PartDefinition elements.
+ *
+ * Example:
+ * Vehicle
+ */
+operation SysML!Namespace topLevelPartDefinitions() {
+    return self.topLevelOwnedElements().select(e | e.isKindOf(SysML!PartDefinition));
+}
+
+/*
+ * Return top-level AttributeDefinition elements.
+ *
+ * Your current Items example may not use many AttributeDefinitions,
+ * but the helper is kept for other SysML models.
+ */
+operation SysML!Namespace topLevelAttributeDefinitions() {
+    return self.topLevelOwnedElements().select(e | e.isKindOf(SysML!AttributeDefinition));
+}
+
+/*
+ * Return top-level ItemDefinition elements.
+ *
+ * Example:
+ * - Fuel
+ * - Person
+ */
+operation SysML!Namespace topLevelItemDefinitions() {
+    return self.topLevelOwnedElements().select(e | e.isKindOf(SysML!ItemDefinition));
+}
+
+/*
+ * Return exportable child features/usages from any element.
+ *
+ * This is used on:
+ * - Vehicle   -> mass, driver, fuelTank
+ * - fuelTank  -> fuel
+ *
+ * So this helper makes nested structures visible instead of flattening them away.
+ */
+operation Any exportedFeatures() {
+    return self.directOwnedElements().select(e |
+        e.isKindOf(SysML!AttributeUsage) or
+        e.isKindOf(SysML!PartUsage) or
+        e.isKindOf(SysML!ItemUsage) or
+        e.isKindOf(SysML!ReferenceUsage)
+    );
+}
+
+/*
+ * Return multiplicity children under a feature.
+ *
+ * Example:
+ * mass may own a Multiplicity element,
+ * fuelTank may also own a Multiplicity element.
+ */
+operation Any multiplicities() {
+    return self.directOwnedElements().select(e | e.isKindOf(SysML!Multiplicity));
+}
+
+/*
+ * Return FeatureTyping relationships of a feature.
+ *
+ * Example:
+ * - mass has a FeatureTyping to a scalar/type
+ * - fuel may have a FeatureTyping to ItemDefinition Fuel
+ * - driver may have a FeatureTyping to ItemDefinition Person
+ */
+operation Any typingRelationships() {
+    return self.ownedRelationshipsSafe().select(r | r.eClass().name = "FeatureTyping");
+}
+
+/*
+ * Resolve the type target from the first FeatureTyping relationship.
+ *
+ * Example:
+ * - fuel  -> Fuel
+ * - driver -> Person
+ *
+ * If the target is unresolved, this may still be an EMF proxy.
+ */
+operation Any typeTarget() {
+    var typings = self.typingRelationships();
+    if (typings.isEmpty()) return null;
+
+    var typing = typings.first();
+
+    if (typing.hasProperty("type") and not typing.type.isUndefined()) {
+        return typing.type;
+    }
+
+    return null;
+}
+
+/*
+ * Return the declared name of the referenced type.
+ *
+ * Example:
+ * - fuel.typeRef.name   -> Fuel
+ * - driver.typeRef.name -> Person
+ */
+operation Any simpleTypeRefName() : String {
+    var target = self.typeTarget();
+    if (target.isUndefined()) return "";
+
+    if (target.hasProperty("declaredName") and not target.declaredName.isUndefined()) {
+        return target.declaredName;
+    }
+
+    return "";
+}
+
+/*
+ * Return the elementId of the referenced type if available.
+ *
+ * Example:
+ * - Fuel elementId
+ * - Person elementId
+ */
+operation Any simpleTypeRefId() : String {
+    var target = self.typeTarget();
+    if (target.isUndefined()) return "";
+
+    if (target.hasProperty("elementId") and not target.elementId.isUndefined()) {
+        return target.elementId;
+    }
+
+    return "";
+}
+
+/*
+ * If the referenced type is unresolved and still a proxy,
+ * return only the proxy URI.
+ *
+ * This avoids getting a huge EMF debug string like:
+ * DynamicEObjectImpl@... eProxyURI ...
+ *
+ * Example:
+ * if fuel or mass points to an external file and EMF has not fully resolved it,
+ * this returns only the proxy URI.
+ */
+operation Any simpleTypeRefUri() : String {
+    var target = self.typeTarget();
+    if (target.isUndefined()) return "";
+
+    if (target.eIsProxy()) {
+        return target.eProxyURI().toString();
+    }
+
+    return "";
+}

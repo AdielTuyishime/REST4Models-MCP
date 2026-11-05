@@ -1,0 +1,24 @@
+{
+  "$schema": "https://mde-workbench.org/schema/capability-descriptor/v1.0.0",
+  "capability_id": "list_packages",
+  "provider": {
+    "id": "rest4models",
+    "title": "REST4Models",
+    "version": "0.11.0"
+  },
+  "category": "navigation_query",
+  "description": "Lists all registered EPackages. No preconditions; returns an empty list if no packages are registered. No side effects.",
+  "input_schema": {
+    "type": "object"
+  },
+  "output": {
+    "form": "report",
+    "description": "The list of all registered EPackages."
+  },
+  "binding": {
+    "tool": "navigation_query",
+    "static_args": {
+      "capability_id": "list_packages"
+    }
+  }
+}

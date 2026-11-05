@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<json:Object
+    xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:json="http://www.bamol.pt/json/Json"
+    xsi:schemaLocation="http://www.bamol.pt/json/Json Json.ecore">
+  <members/>
+</json:Object>

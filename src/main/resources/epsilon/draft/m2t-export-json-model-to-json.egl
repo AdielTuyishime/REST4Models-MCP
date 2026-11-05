@@ -1,0 +1,8 @@
+[%import "m2t_json_model_to_json_helpers.eol";%]
+[% var roots = getJsonRoots(); %]
+
+[% if (roots.isEmpty()) { %]
+{}
+[% } else { %]
+[%= roots.first().toPrettyJsonText() %]
+[% } %]

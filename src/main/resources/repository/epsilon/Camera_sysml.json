@@ -1,0 +1,238 @@
+{
+  "namespaces": [
+    {
+      "type": "Namespace",
+      "elementId": "8864b353-5aaa-41f1-8bf0-96b10675d642",
+      "packages": [
+      ],
+      "referenceUsages": [
+      ],
+      "itemDefinitions": [
+        {
+          "type": "PartDefinition",
+          "elementId": "d73c7c7e-018a-4e34-928b-73d18afe3331",
+          "name": "Camera"
+        }
+      ],
+      "partDefinitions": [
+        {
+          "type": "PartDefinition",
+          "elementId": "d73c7c7e-018a-4e34-928b-73d18afe3331",
+          "name": "Camera",
+          "features": [
+            {
+              "type": "PartUsage",
+              "elementId": "eaea0a1c-84d8-4b43-98ad-84d3d4f095f3",
+              "name": "focusingSubsystem",
+              "isComposite": true,
+              "direction": "in",
+              "typeRef": {
+                "name": null,
+                "elementId": null,
+                "proxyUri": null
+              },
+              "multiplicity": [
+                {
+                  "type": "Multiplicity",
+                  "elementId": "06449543-af13-4b76-9b58-c073094bc7a1"
+                }
+              ],
+              "features": [
+              ]
+            }
+,            {
+              "type": "PartUsage",
+              "elementId": "088b6c82-dd09-41c2-82bf-9526fb6db14d",
+              "name": "imagingSubsystem",
+              "isComposite": true,
+              "direction": "in",
+              "typeRef": {
+                "name": null,
+                "elementId": null,
+                "proxyUri": null
+              },
+              "multiplicity": [
+                {
+                  "type": "Multiplicity",
+                  "elementId": "9c1e7831-8893-4c3f-9911-92b692b8df1c"
+                }
+              ],
+              "features": [
+              ]
+            }
+          ]
+        }
+      ],
+      "attributeDefinitions": [
+      ]
+    }
+,    {
+      "type": "PartDefinition",
+      "elementId": "d73c7c7e-018a-4e34-928b-73d18afe3331",
+      "packages": [
+      ],
+      "referenceUsages": [
+      ],
+      "itemDefinitions": [
+      ],
+      "partDefinitions": [
+      ],
+      "attributeDefinitions": [
+      ]
+    }
+,    {
+      "type": "PerformActionUsage",
+      "elementId": "067dd860-4978-4e10-ba40-9dfae6943864",
+      "packages": [
+      ],
+      "referenceUsages": [
+      ],
+      "itemDefinitions": [
+      ],
+      "partDefinitions": [
+      ],
+      "attributeDefinitions": [
+      ]
+    }
+,    {
+      "type": "MultiplicityRange",
+      "elementId": "bf6a505b-fa6b-471a-85b0-57f2070693b8",
+      "packages": [
+      ],
+      "referenceUsages": [
+      ],
+      "itemDefinitions": [
+      ],
+      "partDefinitions": [
+      ],
+      "attributeDefinitions": [
+      ]
+    }
+,    {
+      "type": "LiteralInfinity",
+      "elementId": "3667ff40-1336-44f3-99af-4d2a69326639",
+      "packages": [
+      ],
+      "referenceUsages": [
+      ],
+      "itemDefinitions": [
+      ],
+      "partDefinitions": [
+      ],
+      "attributeDefinitions": [
+      ]
+    }
+,    {
+      "type": "PartUsage",
+      "elementId": "eaea0a1c-84d8-4b43-98ad-84d3d4f095f3",
+      "packages": [
+      ],
+      "referenceUsages": [
+      ],
+      "itemDefinitions": [
+      ],
+      "partDefinitions": [
+      ],
+      "attributeDefinitions": [
+      ]
+    }
+,    {
+      "type": "PerformActionUsage",
+      "elementId": "e242ad4a-ce8f-4b19-b4b2-7352cf5e1aec",
+      "packages": [
+      ],
+      "referenceUsages": [
+      ],
+      "itemDefinitions": [
+      ],
+      "partDefinitions": [
+      ],
+      "attributeDefinitions": [
+      ]
+    }
+,    {
+      "type": "Feature",
+      "elementId": "2227b99f-bf34-4454-bcbf-2a37703f618e",
+      "packages": [
+      ],
+      "referenceUsages": [
+      ],
+      "itemDefinitions": [
+      ],
+      "partDefinitions": [
+      ],
+      "attributeDefinitions": [
+      ]
+    }
+,    {
+      "type": "Multiplicity",
+      "elementId": "06449543-af13-4b76-9b58-c073094bc7a1",
+      "packages": [
+      ],
+      "referenceUsages": [
+      ],
+      "itemDefinitions": [
+      ],
+      "partDefinitions": [
+      ],
+      "attributeDefinitions": [
+      ]
+    }
+,    {
+      "type": "PartUsage",
+      "elementId": "088b6c82-dd09-41c2-82bf-9526fb6db14d",
+      "packages": [
+      ],
+      "referenceUsages": [
+      ],
+      "itemDefinitions": [
+      ],
+      "partDefinitions": [
+      ],
+      "attributeDefinitions": [
+      ]
+    }
+,    {
+      "type": "PerformActionUsage",
+      "elementId": "d0338c9d-2fd2-4e7b-b3db-f2be20bf2481",
+      "packages": [
+      ],
+      "referenceUsages": [
+      ],
+      "itemDefinitions": [
+      ],
+      "partDefinitions": [
+      ],
+      "attributeDefinitions": [
+      ]
+    }
+,    {
+      "type": "Feature",
+      "elementId": "69fd7aa9-f807-4668-afbe-063f49b9c58e",
+      "packages": [
+      ],
+      "referenceUsages": [
+      ],
+      "itemDefinitions": [
+      ],
+      "partDefinitions": [
+      ],
+      "attributeDefinitions": [
+      ]
+    }
+,    {
+      "type": "Multiplicity",
+      "elementId": "9c1e7831-8893-4c3f-9911-92b692b8df1c",
+      "packages": [
+      ],
+      "referenceUsages": [
+      ],
+      "itemDefinitions": [
+      ],
+      "partDefinitions": [
+      ],
+      "attributeDefinitions": [
+      ]
+    }
+  ]
+}

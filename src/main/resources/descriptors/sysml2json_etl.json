@@ -1,0 +1,47 @@
+{
+  "$schema": "https://mde-workbench.org/schema/capability-descriptor/v1.0.0",
+  "capability_id": "sysml2json_etl",
+  "provider": {
+    "id": "rest4models",
+    "title": "REST4Models",
+    "version": "0.11.0"
+  },
+  "category": "model_to_model",
+  "technical_space": "emf/xmi",
+  "description": "Transforms a SysML XMI model into a JSON model (XMI format) conforming to Json.ecore. Exogenous, out-place, horizontal transformation using Epsilon ETL rules. Each SysML element (PartDefinition, AttributeUsage, etc.) is mapped to a JSON Object with typed Members.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "model": {
+        "type": "string",
+        "description": "Source model filename in the repository (e.g., VehicleDefinitions.xmi)"
+      },
+      "metamodel": {
+        "type": "string",
+        "description": "Source metamodel name (e.g., SysML, Family). Provides context for validation."
+      },
+      "output": {
+        "type": "string",
+        "description": "Output filename. If omitted, a name is auto-generated based on the input."
+      }
+    },
+    "required": [
+      "model",
+      "metamodel"
+    ]
+  },
+  "output": {
+    "form": "model",
+    "format": ".xmi conforming to Json.ecore",
+    "description": "A JSON model in XMI format conforming to Json.ecore."
+  },
+  "chainable_with": [
+    "xmi_to_json_jackson"
+  ],
+  "binding": {
+    "tool": "model_to_model",
+    "static_args": {
+      "capability_id": "sysml2json_etl"
+    }
+  }
+}

@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>GUI-Modeling</title>
+
+<!-- Fonts and Libraries -->
+<link
+	href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+	rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lodash@4/lodash.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/backbone@1/backbone-min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jointjs/dist/joint.js"></script>
+<link rel="stylesheet"
+	href="https://cdn.jsdelivr.net/npm/jointjs/dist/joint.min.css" />
+
+<!-- Styles -->
+<style>
+/* Global layout */
+body {
+	font-family: 'Inter', Arial, sans-serif;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	background: #f9f9f9;
+}
+
+header {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 50px;
+	background: #163250;
+	color: #fff;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0 30px;
+	z-index: 1000;
+}
+
+.logo img {
+	height: 78px;
+}
+
+.top-nav a {
+	color: #fff;
+	text-decoration: none;
+	font-weight: bold;
+	margin-left: 30px;
+}
+
+.top-nav a:hover {
+	text-decoration: underline;
+}
+
+#container {
+	display: flex;
+	height: calc(100vh - 60px);
+	padding-top: 50px;
+}
+
+#sidebar {
+	width: 300px;
+	border-right: 1px solid #ccc;
+	padding: 1rem;
+	overflow-y: auto;
+	background: #f5f1f0;
+}
+
+#graph {
+	flex: 1;
+	height: 100%;
+}
+
+.class-item {
+	margin: 0.5rem 0;
+	cursor: pointer;
+	color: white;
+}
+
+.class-item:hover {
+	text-decoration: underline;
+}
+
+.form-group {
+	display: flex;
+	gap: 0.5rem;
+	margin-bottom: 1rem;
+	align-items: center;
+}
+
+input[type="text"] {
+	flex: 1;
+	padding: 0.5rem;
+	border: 1px solid #ccc;
+	border-radius: 6px;
+	font-size: 1rem;
+}
+
+.load-btn {
+	padding: 0.5rem 1rem;
+	background-color: #003366;
+	color: white;
+	border: none;
+	border-radius: 6px;
+	cursor: pointer;
+	font-size: 1rem;
+}
+
+.load-btn:hover {
+	background-color: #005599;
+}
+
+/* Modal base style */
+.modal {
+	display: none;
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(0, 0, 0, 0.5);
+	justify-content: center;
+	align-items: center;
+	z-index: 9999;
+}
+
+.modal-content {
+	background: white;
+	padding: 2rem;
+	border-radius: 8px;
+	width: 300px;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.modal-content h3 {
+	margin-top: 0;
+}
+
+.modal-content input {
+	width: 100%;
+	padding: 0.5rem;
+	margin: 0.5rem 0;
+}
+
+.modal-content button {
+	padding: 0.5rem 1rem;
+	margin-right: 0.5rem;
+}
+
+/* Customer Context Menu */
+#contextMenu div:hover {
+	background-color: #f0f0f0;
+}
+
+/* Class for highlight */
+.selected-class {
+	stroke: #ff6600 !important;
+	stroke-width: 3 !important;
+}
+
+.checkbox-group {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	margin-top: 0.5rem;
+}
+
+.checkbox-row {
+	display: flex;
+	grid-template-columns: 120px 1fr;
+	/* 120px label column, then checkbox */
+	align-items: center;
+}
+
+.checkbox-row label {
+	justify-self: start;
+}
+
+.checkbox-row input[type="checkbox"] {
+	justify-self: start;
+}
+
+/**
+	*Model Summary
+	*/
+#summaryPanel {
+	background-color: #111;
+	color: white;
+	padding: 1rem;
+	border-radius: 8px;
+	margin-top: 1rem;
+	font-size: 1rem;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+#summaryPanel div {
+	display: flex;
+	justify-content: space-between;
+	margin-bottom: 0.5rem;
+}
+
+#summaryPanel span {
+	font-weight: 600;
+}
+
+#summaryPanel strong {
+	font-weight: bold;
+}
+
+/**
+	*Model Summary
+	*/
+#classList {
+	background-color: #111;
+	color: white;
+	padding: 1rem;
+	border-radius: 8px;
+	margin-top: 1rem;
+	font-size: 1rem;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+#classList div {
+	display: flex;
+	justify-content: space-between;
+	margin-bottom: 0.5rem;
+}
+
+#classList span {
+	font-weight: 600;
+}
+
+#classList strong {
+	font-weight: bold;
+}
+
+select#packageSelect {
+	width: 100%;
+	padding: 0.5rem;
+	border-radius: 6px;
+	border: 1px solid #ccc;
+	font-size: 1rem;
+	background-color: #fff;
+	color: #333;
+	font-family: 'Inter', sans-serif;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+	transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+select#packageSelect:focus {
+	border-color: #005599;
+	outline: none;
+	box-shadow: 0 0 0 2px rgba(0, 85, 153, 0.2);
+}
+
+select {
+	font-size: 1rem;
+	border: 1px solid #ccc;
+	border-radius: 6px;
+	padding: 0.5rem;
+}
+</style>
+</head>
+
+<body>
+	<!-- Header bar -->
+	<header>
+		<div class="logo">
+			<img src="/logo.png" alt="Logo">
+		</div>
+		<nav class="top-nav">
+			<a href="/">Home</a>
+		</nav>
+	</header>
+
+	<!-- Main app container -->
+	<div id="container">
+		<!-- Sidebar -->
+		<div id="sidebar">
+			<!-- New package Creation Modal -->
+
+			<!--
+      <h3>Load a Model</h3>
+      <div class="form-group">
+        <input type="text" id="packageInput" placeholder="Enter package name" />
+        <button class="load-btn" onclick="loadPackage()">Load</button>
+      </div>
+      -->
+
+			<h3>Load a Metamodel</h3>
+			<div class="form-group">
+				<!--<label for="packageSelect" style="font-weight: 600; margin-bottom: 0.25rem; display: block;">Select Model Package</label> -->
+				<select id="packageSelect">
+					<option value="">Select a package...</option>
+				</select>
+				<button class="load-btn" onclick="loadPackage()">Load</button>
+			</div>
+
+
+			<h3>EClasses</h3>
+			<div id="classList">Loading...</div>
+
+			<!-- Add Relationship Button -->
+			<!-- 
+      <h3>Add Relationship</h3>
+      <button class="load-btn" onclick="startAddRelationship()">Add Relationship</button>
+      -->
+			<h3>Metamodel Statistics</h3>
+			<div id="summaryPanel">
+				<div>
+					<span>EClasses:</span> <strong id="summaryClasses">0</strong>
+				</div>
+				<div>
+					<span>EAttributes:</span> <strong id="summaryAttributes">0</strong>
+				</div>
+				<div>
+					<span>EReferences:</span> <strong id="summaryReferences">0</strong>
+				</div>
+			</div>
+
+			<h3>Create Metamodel</h3>
+			<div class="form-group">
+				<button class="load-btn" onclick="openPackageModal()">Create
+					Metamodel</button>
+			</div>
+
+			<h3>Create EClass</h3>
+			<div class="form-group">
+				<input type="text" id="newClassName" placeholder="Enter Class name" />
+				<button class="load-btn" onclick="addNewClass()">Add</button>
+			</div>
+
+		</div>
+
+
+		<!-- Canvas for diagram -->
+		<div id="graph"></div>
+	</div>
+
+	<!-- Class Creation Modal -->
+	<div id="classModal" class="modal">
+		<div class="modal-content">
+			<h3>Create EClass</h3>
+			<input type="text" id="modalClassName" placeholder="Class name" />
+			<div style="text-align: right;">
+				<button onclick="createClassFromModal()">Create</button>
+				<button onclick="closeModal()">Cancel</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- Attribute Modal -->
+	<div id="attrModal" class="modal">
+		<div class="modal-content">
+			<h3>
+				Add Attribute to <span id="attrTargetClass"></span>
+			</h3>
+			<input type="text" id="newAttrName" placeholder="Attribute name" />
+			<!--   <input type="text" id="newAttrType" placeholder="Attribute type" /> -->
+			<select id="newAttrType"
+				style="width: 100%; padding: 0.5rem; margin: 0.5rem 0;">
+				<option value="">Select Data Type</option>
+				<option value="EString">EString</option>
+				<option value="EInt">EInt</option>
+				<option value="EBoolean">EBoolean</option>
+				<option value="EDouble">EDouble</option>
+				<option value="EFloat">EFloat</option>
+				<option value="ELong">ELong</option>
+				<option value="EShort">EShort</option>
+				<option value="EChar">EChar</option>
+				<option value="EDate">EDate</option>
+				<option value="EByte">EByte</option>
+			</select>
+
+			<div style="text-align: right; margin-top: 1rem;">
+				<button onclick="createAttributeForClass()">Add</button>
+				<button onclick="closeAttrModal()">Cancel</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- ✅ Relationship Modal -->
+	<!-- Modal to create a relationship -->
+	<div id="relationshipModal" class="modal">
+		<div class="modal-content">
+			<h3>Create Relationship</h3>
+			<p>
+				Source: <strong id="relSource"></strong>
+			</p>
+			<p>
+				Target: <strong id="relTarget"></strong>
+			</p>
+
+			<input type="text" id="relName" placeholder="Reference name" />
+
+			<div class="checkbox-group">
+				<div class="checkbox-row">
+					<label for="relContainment">Containment</label> <input
+						type="checkbox" id="relContainment" />
+				</div>
+				<div class="checkbox-row">
+					<label for="relIsMany">IsMany</label> <input type="checkbox"
+						id="relIsMany" />
+				</div>
+			</div>
+
+			<div style="text-align: center; margin-top: 1rem;">
+				<button onclick="createRelationship()">Create</button>
+				<button onclick="closeRelationshipModal()">Cancel</button>
+			</div>
+		</div>
+
+	</div>
+
+	<!-- Create a new package -->
+	<div id="packageModal" class="modal">
+		<div class="modal-content">
+			<h3>Create Metamodel</h3>
+
+			<input type="text" id="modalPackageName" placeholder="Package name" />
+			<input type="text" id="modalPackagePrefix"
+				placeholder="Namespace prefix" /> <input type="text"
+				id="modalPackageURI" placeholder="Namespace URI" />
+
+			<div style="text-align: right; margin-top: 1rem;">
+				<button onclick="submitPackage()">Create</button>
+				<button onclick="closePackageModal()">Cancel</button>
+			</div>
+		</div>
+	</div>
+
+
+
+	<!-- Custom Context Menu -->
+	<div id="contextMenu"
+		style="display: none; position: absolute; background: white; border: 1px solid #ccc; padding: 0.5rem; z-index: 10000; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); border-radius: 4px;">
+		<div id="addRelOption" style="cursor: pointer; padding: 0.3rem 1rem;">Add
+			Relationship</div>
+		<div id="deleteClassOption"
+			style="cursor: pointer; padding: 0.3rem 1rem;">Delete Class</div>
+	</div>
+
+
+	<!--  
+</body>
+-->
+
+
+	<script>
+window.onload = () => {
+	// Drop down of a List of packages
+	populatePackageDropdown();
+ 	// Now all your other logic: graph, paper, drawGraph(), etc.
+    // Initialize JointJS Graph and Paper
+    const graph = new joint.dia.Graph();
+    const paper = new joint.dia.Paper({
+        el: document.getElementById('graph'),
+        model: graph,
+        width: '100%',
+        height: '100%',
+        gridSize: 10,
+        drawGrid: true
+    });
+    
+    let currentSelectedClass = null;
+    let selectedSourceClass = null;
+    let selectedTargetClass = null;
+    let isRelationshipMode = false;
+    
+    
+   
+    /**
+     * Fetch all classes in a package from the backend.
+     */
+    async function fetchClasses(packageName) {
+        const res = await fetch(`/api/v1/metamodels/${packageName}/structure`);
+        return await res.json();
+    }
+
+    /**
+     * Render class list on sidebar
+     */
+    function renderClassList(classes) {
+        const container = document.getElementById("classList");
+        container.innerHTML = "";
+        classes.forEach(cls => {
+            const div = document.createElement("div");
+            div.classList.add("class-item");
+            div.textContent = cls.className;
+            div.onclick = () => drawGraph(classes);
+            container.appendChild(div);
+        });
+    }
+
+    /**
+     * Draw class diagram with layout and associations
+     */
+    function drawGraph(classes) {
+        graph.clear();
+        const uml = joint.shapes.uml;
+        const classMap = {};
+
+        const spacingX = 300;
+        const spacingY = 200;
+        let row = 0;
+        let col = 0;
+
+        // Draw classes
+        classes.forEach((cls, i) => {
+            const classBox = new uml.Class({
+                position: {
+                    x: col * spacingX + 50,
+                    y: row * spacingY + 50
+                },
+                size: { width: 200, height: 120 },
+                name: cls.className,
+                attributes: cls.attributes?.map(attr => `${attr.name}: ${attr.type}`) || [],
+                methods: [],
+                attrs: {
+                    '.uml-class-name-rect': {
+                        fill: '#003366',
+                        stroke: '#000',
+                        'stroke-width': 1
+                    },
+                    '.uml-class-name-text': {
+                        fill: '#fff',
+                        'font-weight': 'bold',
+                        'font-size': 14,
+                        'ref-y': 0.5,
+                        'y-alignment': 'middle'
+                    },
+                    '.uml-class-attrs-rect': {
+                        fill: '#2c7bbf',
+                        stroke: '#000',
+                        'stroke-width': 1
+                    },
+                    '.uml-class-attrs-text': {
+                        fill: '#eee',
+                        'font-size': 12
+                    },
+                    '.uml-class-methods-rect': {
+                        fill: '#005f99',
+                        stroke: '#000',
+                        'stroke-width': 1
+                    },
+                    '.uml-class-methods-text': {
+                        fill: '#ccc',
+                        'font-size': 11
+                    }
+                }
+
+            });
+
+            classMap[cls.className] = classBox;
+            graph.addCell(classBox);
+
+            col++;
+            if (col % 3 === 0) {
+                col = 0;
+                row++;
+            }
+        });
+      
+        // Draw relationships (associations)
+        classes.forEach(cls => {
+            const source = classMap[cls.className];
+            (cls.references || []).forEach(ref => {
+                const target = classMap[ref.type];
+                if (target) {
+                    const link = new uml.Association({
+                        source: { id: source.id },
+                        target: { id: target.id },
+                        labels: [
+                            {
+                                position: 0.5,
+                                attrs: {
+                                    text: { text: ref.name, 'font-size': 10, fill: '#333' }
+                                }
+                            },
+                            {
+                                position: 0.95,
+                                attrs: {
+                                    text: { text: ref.multiplicity || '', 'font-size': 9, fill: '#666' }
+                                }
+                            }
+                        ]
+                    });
+                    graph.addCell(link);
+ 
+                }
+            });
+        });     
+    }
+
+    /**
+     * Add a new class to the model
+     */
+    function addNewClass() {
+        const pkg = document.getElementById("packageSelect").value.trim();
+        const newClassName = document.getElementById("newClassName").value.trim();
+
+        if (!pkg || !newClassName) {
+            alert("Please enter both package name and class name.");
+            return;
+        }
+
+        fetch(`/ecore/${pkg}/class?newClassName=${encodeURIComponent(newClassName)}`, {
+            method: "POST"
+        })
+        .then(res => {
+            if (!res.ok) throw new Error("Failed to create class.");
+            return fetchClasses(pkg);
+            
+        })
+        .then(classes => {
+            renderClassList(classes);
+            drawGraph(classes);
+            document.getElementById("newClassName").value = ""; 
+            
+        })
+        .catch(err => {
+            alert("Error: " + err.message);
+            console.error(err);
+        });
+    }
+    window.addNewClass = addNewClass;
+
+    /**
+     * Handle canvas double-click for creating a new class
+     */
+    paper.el.addEventListener('dblclick', (evt) => {
+        const target = paper.findView(evt.target);
+        if (target && target.model.isElement()) return;
+
+        const pkg = document.getElementById("packageSelect").value.trim();
+        if (!pkg) {
+            alert("Please enter a package name first.");
+            return;
+        }
+
+        const paperPoint = paper.clientToLocalPoint({ x: evt.clientX, y: evt.clientY });
+        const className = prompt("Enter new class name:");
+        if (!className) return;
+
+        fetch(`/ecore/${pkg}/class?newClassName=${encodeURIComponent(className)}`, {
+            method: "POST"
+        })
+        .then(res => {
+            if (!res.ok) throw new Error("Failed to create class.");
+            return fetchClasses(pkg);
+        })
+        .then(classes => {
+            renderClassList(classes);
+            drawGraph(classes);
+            fetchAndRenderSummary(pkg); // 👈 Model summary
+            setTimeout(() => {
+                const node = graph.getElements().find(e => e.attributes.name === className);
+                if (node) {
+                    node.translate(paperPoint.x - node.position().x, paperPoint.y - node.position().y);
+                }
+            }, 100);
+        })
+        .catch(err => {
+            alert("Error: " + err.message);
+            console.error(err);
+        });
+    }, { passive: false });
+    
+
+    /**
+     * Load classes of a given package
+     */
+    function loadPackage() {
+        const pkg = document.getElementById("packageSelect").value.trim();
+        if (!pkg) {
+            alert("Please select a package.");
+            return;
+        }
+
+        fetchClasses(pkg).then(classes => {
+            renderClassList(classes);
+            drawGraph(classes);
+            fetchAndRenderSummary(pkg); // 👈 Model summary
+        }).catch(err => {
+            alert("Failed to load package: " + pkg);
+            console.error(err);
+        });
+    }
+
+    window.loadPackage = loadPackage;
+	
+    function populatePackageDropdown() {
+    	 console.log("Calling fetch for /metamodels/epackages");
+        fetch('/api/v1/metamodels')
+            .then(res => res.json())
+            .then(pkgs => {
+                console.log("Received packages:", pkgs); // 👈 LOG RESPONSE
+
+                const select = document.getElementById("packageSelect");
+                select.innerHTML = '<option value="">Select a package...</option>';
+
+                pkgs.forEach(pkg => {
+                    const opt = document.createElement("option");
+                    opt.value = pkg.name;
+                    opt.textContent = pkg.name;
+                    select.appendChild(opt);
+                });
+            })
+            .catch(err => {
+                console.error("Failed to load packages:", err); // 👈 LOG ERROR
+            });
+    }
+    
+    /**
+     * Show modal to add attribute on class double-click
+     */
+    paper.on('element:pointerdblclick', (elementView) => {
+        const className = elementView.model.attributes.name;
+        currentSelectedClass = className;
+
+        document.getElementById('attrTargetClass').textContent = className;
+        document.getElementById('newAttrName').value = '';
+        document.getElementById('newAttrType').value = '';
+        document.getElementById('attrModal').style.display = 'flex';
+    });
+
+    /**
+     * Create attribute and refresh diagram
+     */
+    function createAttributeForClass() {
+        const pkg = document.getElementById("packageSelect").value.trim();
+        const attrName = document.getElementById("newAttrName").value.trim();
+        const attrType = document.getElementById("newAttrType").value.trim();
+
+        if (!pkg || !currentSelectedClass || !attrName || !attrType) {
+            alert("Please fill all fields: package, class, attribute name, and type.");
+            return;
+        }
+
+        fetch(`/ecore/${pkg}/${currentSelectedClass}/attribute?attributeName=${encodeURIComponent(attrName)}&attributeType=${encodeURIComponent(attrType)}`, {
+            method: "POST"
+        })
+        .then(res => {
+            if (!res.ok) throw new Error("Failed to create attribute.");
+            return fetchClasses(pkg);
+        })
+        .then(classes => {
+            renderClassList(classes);
+            drawGraph(classes);            
+            closeAttrModal();
+        })
+        .catch(err => {
+            alert("Error: " + err.message);
+            console.error(err);
+        });
+    }
+    window.createAttributeForClass = createAttributeForClass;
+
+    function closeAttrModal() {
+        document.getElementById('attrModal').style.display = 'none';
+        currentSelectedClass = null;
+    }
+    window.closeAttrModal = closeAttrModal;
+
+   
+  /* Relationship logic
+  */
+	// Hide context menu on global click
+	document.addEventListener('click', () => {
+	    document.getElementById("contextMenu").style.display = 'none';
+	});
+	
+	// Right-click on class node
+	/*
+	paper.on('element:contextmenu', (elementView, evt) => {
+	    evt.preventDefault(); // prevent default browser menu
+	
+	    const menu = document.getElementById("contextMenu");
+	    menu.style.left = `${evt.clientX}px`;
+	    menu.style.top = `${evt.clientY}px`;
+	    menu.style.display = 'block';
+	
+	    
+	    const className = elementView.model.attributes.name;
+	    const pkg = document.getElementById("packageInput").value.trim();
+	    
+	    // Store the clicked class name as the source
+	    selectedSourceClass = className;
+	    selectedSourceElementView = elementView;
+
+	
+	    // Setup Add Relationship handler
+	    document.getElementById("addRelOption").onclick = () => {
+	        document.getElementById("contextMenu").style.display = 'none';
+	        selectedSourceClass = className;
+	        selectedSourceElementView = elementView;
+
+	        isRelationshipMode = true;
+	        alert(`Source class "${className}" is selected. Now click the target class.`);
+	        
+	     // Highlight the selected source class
+	        highlightElement(elementView);
+	    };
+	});
+	*/
+	
+	paper.on('element:contextmenu', (elementView, evt) => {
+	    evt.preventDefault(); // prevent default browser menu
+
+	    const menu = document.getElementById("contextMenu");
+	    menu.style.left = `${evt.clientX}px`;
+	    menu.style.top = `${evt.clientY}px`;
+	    menu.style.display = 'block';
+
+	    const className = elementView.model.attributes.name;
+	    const pkg = document.getElementById("packageSelect").value.trim();
+
+	    // Store the clicked class name as the source
+	    selectedSourceClass = className;
+	    selectedSourceElementView = elementView;
+
+	    // Setup Add Relationship handler
+	    document.getElementById("addRelOption").onclick = () => {
+	        menu.style.display = 'none';
+	        isRelationshipMode = true;
+	        alert(`Source class "${className}" is selected. Now click the target class.`);
+	        highlightElement(elementView);
+	    };
+
+	    // Setup Delete Class handler
+	    document.getElementById("deleteClassOption").onclick = () => {
+	        menu.style.display = 'none';
+	        if (!pkg) {
+	            alert("Please enter a package name first.");
+	            return;
+	        }
+	        
+	        if (confirm(`Are you sure you want to delete the class "${className}"?`)) {
+	            elementView.model.remove(); // visually remove immediately
+
+	            const url = `/metamodel/class?packageName=${encodeURIComponent(pkg)}&className=${encodeURIComponent(className)}`;
+	            fetch(url, { method: 'DELETE' })
+	                .then(res => {
+	                    if (!res.ok) throw new Error("Failed to delete class.");
+	                    return fetchClasses(pkg);
+	                })
+	                .then(classes => {
+	                    renderClassList(classes);
+	                    drawGraph(classes);
+	                })
+	                .catch(err => {
+	                    alert("Error: " + err.message);
+	                    console.error(err);
+	                });
+	        }
+			
+	        /*
+	        if (confirm(`Are you sure you want to delete the class "${className}"?`)) {
+	            const url = `/metamodel/class?packageName=${encodeURIComponent(pkg)}&className=${encodeURIComponent(className)}`;
+	            fetch(url, { method: 'DELETE' })
+	                .then(res => {
+	                    if (!res.ok) throw new Error("Failed to delete class.");
+	                    return fetchClasses(pkg);
+	                })
+	                .then(classes => {
+	                    renderClassList(classes);
+	                    drawGraph(classes);
+	                })
+	                .catch(err => {
+	                    alert("Error: " + err.message);
+	                    console.error(err);
+	                });
+	        }
+	        */
+	       
+	    };
+	});
+
+	// Optional: hide menu on click elsewhere
+	document.addEventListener("click", () => {
+	    const menu = document.getElementById("contextMenu");
+	    if (menu) menu.style.display = 'none';
+	});
+	
+	//***********************************
+	
+	
+	// Handle target class click during relationship mode
+	paper.on('element:pointerclick', (elementView) => {
+	    if (!isRelationshipMode || selectedSourceClass === null) return;
+	
+	    const className = elementView.model.attributes.name;
+	    if (className === selectedSourceClass) {
+	        alert("You must select a different class as target.");
+	        return;
+	    }
+	
+	    selectedTargetClass = className;
+	    isRelationshipMode = false;
+	    showRelationshipModal(); // Reuse your modal
+	});
+
+	
+	//-----Highlight class------
+	function highlightElement(elementView) {
+	    clearHighlight(); // remove from previously selected if any
+	    elementView.highlight(null, {
+	        highlighter: {
+	            name: 'stroke',
+	            options: {
+	                padding: 5,
+	                attrs: {
+	                    'stroke': '#ff6600',
+	                    'stroke-width': 3
+	                }
+	            }
+	        }
+	    });
+	}
+
+	function clearHighlight() {
+	    if (selectedSourceElementView) {
+	        selectedSourceElementView.unhighlight(null);
+	        selectedSourceElementView = null;
+	    }
+	}
+	
+	function closeRelationshipModal() {
+	    document.getElementById("relationshipModal").style.display = 'none';
+	    selectedSourceClass = null;
+	    selectedTargetClass = null;
+	    isRelationshipMode = false;
+	    clearHighlight();
+	}
+
+
+
+ 
+ /*
+    window.startAddRelationship = () => {
+        isRelationshipMode = true;
+        selectedSourceClass = null;
+        selectedTargetClass = null;
+        alert("Click the source class, then the target class.");
+    }
+
+    paper.on('element:pointerclick', (elementView) => {
+        if (!isRelationshipMode) return;
+        const className = elementView.model.attributes.name;
+
+        if (!selectedSourceClass) {
+            selectedSourceClass = className;
+            alert(`Source: ${className} selected. Now click target class.`);
+        } else {
+            selectedTargetClass = className;
+            isRelationshipMode = false;
+            showRelationshipModal();
+        }
+    });
+*/
+    function showRelationshipModal() {
+        document.getElementById("relSource").textContent = selectedSourceClass;
+        document.getElementById("relTarget").textContent = selectedTargetClass;
+        document.getElementById("relName").value = "";
+        document.getElementById("relContainment").checked = true;
+        document.getElementById("relIsMany").checked = true;
+        document.getElementById("relationshipModal").style.display = 'flex';
+    }
+
+    window.createRelationship = () => {
+        const pkg = document.getElementById("packageSelect").value.trim();
+        const referenceName = document.getElementById("relName").value.trim();
+        const containment = document.getElementById("relContainment").checked;
+        const isMany = document.getElementById("relIsMany").checked;
+
+        if (!pkg || !selectedSourceClass || !selectedTargetClass || !referenceName) {
+            alert("Please fill all fields or check if a model is loaded");
+            return;
+        }
+
+        const url = `/ecore/${pkg}/${selectedSourceClass}/reference?targetClassName=${encodeURIComponent(selectedTargetClass)}&referenceName=${encodeURIComponent(referenceName)}&containment=${containment}&isMany=${isMany}`;
+
+        fetch(url, { method: "POST" })
+            .then(res => {
+                if (!res.ok) throw new Error("Failed to create reference.");
+                return fetchClasses(pkg);
+            })
+            .then(classes => {
+                renderClassList(classes);
+                drawGraph(classes);
+                closeRelationshipModal();
+            })
+            .catch(err => {
+                alert("Error: " + err.message);
+                console.error(err);
+            });
+    }
+    window.showRelationshipModal=showRelationshipModal;
+
+    window.closeRelationshipModal = () => {
+        document.getElementById("relationshipModal").style.display = 'none';
+        selectedSourceClass = null;
+        selectedTargetClass = null;
+    }
+ 
+    
+    
+   /*
+   * New package creating
+   */
+   
+   function openPackageModal() {
+	    document.getElementById('modalPackageName').value = '';
+	    document.getElementById('modalPackagePrefix').value = '';
+	    document.getElementById('modalPackageURI').value = '';
+	    document.getElementById('packageModal').style.display = 'flex';
+	}
+
+	function closePackageModal() {
+	    document.getElementById('packageModal').style.display = 'none';
+	}
+
+	function submitPackage() {
+	    const name = document.getElementById("modalPackageName").value.trim();
+	    const nsPrefix = document.getElementById("modalPackagePrefix").value.trim();
+	    const nsURI = document.getElementById("modalPackageURI").value.trim();
+
+	    if (!name || !nsPrefix || !nsURI) {
+	        alert("Please fill all fields.");
+	        return;
+	    }
+
+	    const url = `/metamodel/epackage?name=${encodeURIComponent(name)}&nsPrefix=${encodeURIComponent(nsPrefix)}&nsURI=${encodeURIComponent(nsURI)}`;
+
+	    fetch(url, { method: "POST" })
+	        .then(res => {
+	            if (!res.ok) throw new Error("Failed to create package.");
+	            alert(`Package "${name}" created successfully.`);
+	            document.getElementById("packageSelect").value = name;
+	            closePackageModal();
+	            return fetchClasses(name); // auto-refresh
+	        })
+	        .then(classes => {
+	            renderClassList(classes);
+	            drawGraph(classes);
+	            
+	        })
+	        .catch(err => {
+	            alert("Error: " + err.message);
+	            console.error(err);
+	        });
+	}//End new package creation
+	/*expose the modal functions to the global scope so your HTML buttons can access them*/
+	window.openPackageModal = openPackageModal;
+	window.closePackageModal = closePackageModal;
+	window.submitPackage = submitPackage;
+	
+	const customRemoveTool = new joint.linkTools.Remove({
+	    distance: '50%',
+	    action: async function(evt, view) {
+	        evt.stopPropagation();
+	        const link = view.model;
+	
+	        const pkg = document.getElementById("packageSelect").value.trim();
+	        const sourceClass = link.getSourceElement()?.attributes?.name;
+	        const referenceName = link.labels()?.[0]?.attrs?.text?.text;
+	
+	        if (!pkg || !sourceClass || !referenceName) {
+	            alert("Missing reference data.");
+	            return;
+	        }
+	
+	        const url = `/metamodel/reference?packageName=${encodeURIComponent(pkg)}&className=${encodeURIComponent(sourceClass)}&referenceName=${encodeURIComponent(referenceName)}`;
+	
+	        if (confirm(`Delete reference "${referenceName}" from "${sourceClass}"?`)) {
+	            try {
+	                const res = await fetch(url, { method: 'DELETE' });
+	                if (!res.ok) throw new Error("Backend failed to delete the reference.");
+	
+	                // ✅ Remove visually from the graph
+	                link.remove(); // this removes the link from JointJS's internal model
+	                view.remove(); // this ensures the visual element is also removed
+	
+	                // Optional refresh
+	                const classes = await fetchClasses(pkg);
+	                renderClassList(classes);
+	                drawGraph(classes);
+	            } catch (err) {
+	                alert("Error: " + err.message);
+	                console.error(err);
+	            }
+	        }
+	    }
+	});
+	
+	// Attach hover behavior
+	paper.on('link:mouseenter', (linkView) => {
+	    const tools = new joint.dia.ToolsView({
+	        tools: [customRemoveTool]
+	    });
+	    linkView.addTools(tools);
+	});
+	
+	paper.on('link:mouseleave', (linkView) => {
+	    linkView.removeTools();
+	});
+	
+	
+	
+
+	/**
+	*Summary Total number of classes, attributes, references, etc
+	*/
+	function fetchAndRenderSummary(pkg) {
+	    if (!pkg) return;
+
+	    fetch(`/api/v1/metamodels/${encodeURIComponent(pkg)}/summary`)
+	        .then(res => {
+	            if (!res.ok) throw new Error("Failed to fetch summary");
+	            return res.json();
+	        })
+	        .then(summary => {
+			    document.getElementById("summaryClasses").textContent = summary.classes ?? 0;
+			    document.getElementById("summaryAttributes").textContent = summary.attributes ?? 0;
+			    document.getElementById("summaryReferences").textContent = summary.references ?? 0;
+			})
+
+	        .catch(err => {
+	            console.error("Summary fetch error:", err);
+	            document.getElementById("summaryClasses").textContent = "-";
+	            document.getElementById("summaryAttributes").textContent = "-";
+	            document.getElementById("summaryReferences").textContent = "-";
+	        });
+	}
+	
+	 //window.fetchAndRenderSummary = fetchAndRenderSummary;
+
+    
+    /**
+     * Zoom in/out using mouse wheel
+     */
+    let zoomLevel = 1;
+    const zoomMin = 0.2;
+    const zoomMax = 2;
+    const zoomStep = 0.1;
+
+    document.getElementById('graph').addEventListener('wheel', (evt) => {
+        evt.preventDefault();
+        const delta = evt.deltaY;
+
+        if (delta < 0 && zoomLevel < zoomMax) {
+            zoomLevel = Math.min(zoomLevel + zoomStep, zoomMax);
+        } else if (delta > 0 && zoomLevel > zoomMin) {
+            zoomLevel = Math.max(zoomLevel - zoomStep, zoomMin);
+        }
+
+        paper.scale(zoomLevel);
+    }, { passive: false });
+};
+</script>
+
+</body>
+</html>

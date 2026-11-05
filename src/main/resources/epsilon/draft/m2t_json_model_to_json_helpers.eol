@@ -1,0 +1,158 @@
+/*
+ * ============================================================
+ * JSON Model (XMI) -> JSON Text
+ * Helper operations for navigating and serializing the JSON model
+ * ============================================================
+ *
+ * Purpose:
+ * This helper file supports the model-to-text transformation
+ * from a JSON model (conforming to json.ecore) into JSON text.
+ *
+ * Main idea:
+ * - The JSON model is represented using metaclasses such as:
+ *   Object, Member, Array, StringVal, NumberVal, BooleanVal, Null
+ * - These helpers navigate the model safely
+ * - They also serialize each JSON metamodel element recursively
+ *   into valid JSON text
+ */
+
+/*
+ * Escape special characters so that strings are valid in JSON text.
+ */
+operation Any jsonEscape() : String {
+    if (self.isUndefined()) return "";
+
+    var s = self.asString();
+    s = s.replace("\"", "\\\"");
+    s = s.replace("\n", "\\n");
+    s = s.replace("\r", "\\r");
+    s = s.replace("\t", "\\t");
+
+    return s;
+}
+
+/*
+ * Convert any value into a JSON string literal.
+ */
+operation Any toJsonString() : String {
+    if (self.isUndefined()) return "null";
+    return "\"" + self.jsonEscape() + "\"";
+}
+
+/*
+ * Return indentation spaces.
+ */
+operation indent(level : Integer) : String {
+    var s = "";
+    for (i in 1.to(level * 2)) {
+        s = s + " ";
+    }
+    return s;
+}
+
+/*
+ * Return the top-level JSON object(s).
+ */
+operation getJsonRoots() {
+    return JSON!Object.all;
+}
+
+/*
+ * Safely return the members of a JSON Object.
+ */
+operation JSON!Object membersSafe() {
+    if (self.hasProperty("members") and not self.members.isUndefined()) {
+        return self.members;
+    }
+    return Sequence{};
+}
+
+/*
+ * Safely return the values of a JSON Array.
+ */
+operation JSON!Array valuesSafe() {
+    if (self.hasProperty("values") and not self.values.isUndefined()) {
+        return self.values;
+    }
+    return Sequence{};
+}
+
+/*
+ * Entry point for pretty JSON serialization.
+ */
+operation Any toPrettyJsonText() : String {
+    return self.toPrettyJsonTextWithIndent(0);
+}
+
+/*
+ * Serialize any JSON metamodel element recursively with indentation.
+ */
+operation Any toPrettyJsonTextWithIndent(level : Integer) : String {
+    if (self.isKindOf(JSON!Object)) {
+        return self.asPrettyJsonObjectText(level);
+    }
+    if (self.isKindOf(JSON!Array)) {
+        return self.asPrettyJsonArrayText(level);
+    }
+    if (self.isKindOf(JSON!StringVal)) {
+        return self.stringValue.toJsonString();
+    }
+    if (self.isKindOf(JSON!NumberVal)) {
+        return self.numberValue.asString();
+    }
+    if (self.isKindOf(JSON!BooleanVal)) {
+        return self.booleanValue.asString().toLowerCase();
+    }
+    if (self.isKindOf(JSON!Null)) {
+        return "null";
+    }
+    return "null";
+}
+
+/*
+ * Serialize a JSON Object with line breaks and indentation.
+ */
+operation JSON!Object asPrettyJsonObjectText(level : Integer) : String {
+    var members = self.membersSafe();
+    if (members.isEmpty()) return "{}";
+
+    var s = "{\n";
+    var first = true;
+
+    for (m in members) {
+        if (not first) {
+            s = s + ",\n";
+        }
+        first = false;
+
+        s = s + indent(level + 1)
+              + "\"" + m.key.jsonEscape() + "\": "
+              + m.value.toPrettyJsonTextWithIndent(level + 1);
+    }
+
+    s = s + "\n" + indent(level) + "}";
+    return s;
+}
+
+/*
+ * Serialize a JSON Array with line breaks and indentation.
+ */
+operation JSON!Array asPrettyJsonArrayText(level : Integer) : String {
+    var values = self.valuesSafe();
+    if (values.isEmpty()) return "[]";
+
+    var s = "[\n";
+    var first = true;
+
+    for (v in values) {
+        if (not first) {
+            s = s + ",\n";
+        }
+        first = false;
+
+        s = s + indent(level + 1) + v.toPrettyJsonTextWithIndent(level + 1);
+    }
+
+    s = s + "\n" + indent(level) + "]";
+    return s;
+}

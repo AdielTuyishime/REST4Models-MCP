@@ -1,0 +1,45 @@
+{
+  "$schema": "https://mde-workbench.org/schema/capability-descriptor/v1.0.0",
+  "capability_id": "sysml2json_egl",
+  "provider": {
+    "id": "rest4models",
+    "title": "REST4Models",
+    "version": "0.11.0"
+  },
+  "category": "model_to_text",
+  "technical_space": "emf/xmi",
+  "description": "Generates a structured JSON representation from a SysML XMI model using an EGL template. Produces a custom JSON layout with namespaces, packages, partDefinitions, attributeDefinitions, and their nested features. This is a direct SysML-to-JSON extraction without intermediate model transformation.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "model": {
+        "type": "string",
+        "description": "Source model filename in the repository (e.g., VehicleDefinitions.xmi)"
+      },
+      "metamodel": {
+        "type": "string",
+        "description": "Source metamodel name (e.g., SysML). Helps select the right endpoint."
+      },
+      "output": {
+        "type": "string",
+        "description": "Output filename. If omitted, auto-generated based on the input."
+      }
+    },
+    "required": [
+      "model",
+      "metamodel"
+    ]
+  },
+  "output": {
+    "form": "json",
+    "format": ".json (custom SysML JSON structure)",
+    "description": "A custom structured JSON representation of the SysML model."
+  },
+  "chainable_with": [],
+  "binding": {
+    "tool": "model_to_text",
+    "static_args": {
+      "capability_id": "sysml2json_egl"
+    }
+  }
+}

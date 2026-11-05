@@ -1,0 +1,8 @@
+[%import "model_complexity.eol";%]
+{
+  "namespaceCount": [%= overallNamespaceCount() %],
+  "totalSemanticElements": [%= overallTotalSemanticElements() %],
+  "relationshipCount": [%= overallRelationshipCount() %],
+  "maxModelDepth": [%= overallMaxModelDepth() %],
+  "complexityScore": [%= overallComplexityScore() %]
+}

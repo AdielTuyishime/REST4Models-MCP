@@ -1,0 +1,33 @@
+{
+  "$schema": "https://mde-workbench.org/schema/capability-descriptor/v1.0.0",
+  "capability_id": "read_json_file",
+  "provider": {
+    "id": "rest4models",
+    "title": "REST4Models",
+    "version": "0.11.0"
+  },
+  "category": "repository_utilities",
+  "description": "Reads a JSON file from the repository. Precondition: the target JSON file must exist. No side effects; returns the parsed JSON content.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "fileName": {
+        "type": "string",
+        "description": "Filename of the JSON file to read from the repository."
+      }
+    },
+    "required": [
+      "fileName"
+    ]
+  },
+  "output": {
+    "form": "json",
+    "description": "The parsed JSON content of the file."
+  },
+  "binding": {
+    "tool": "repository_utilities",
+    "static_args": {
+      "capability_id": "read_json_file"
+    }
+  }
+}

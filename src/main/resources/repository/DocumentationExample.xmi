@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="ASCII"?>
+<sysml:Namespace xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:sysml="https://www.omg.org/spec/SysML/20250201" xmi:id="fa35830e-1275-47fd-bfe2-6f8c8bf1d8a9" elementId="fa35830e-1275-47fd-bfe2-6f8c8bf1d8a9">
+  <ownedRelationship xsi:type="sysml:OwningMembership" xmi:id="9cfd8b67-6530-43ab-a087-8d69e5e8c5a9" elementId="9cfd8b67-6530-43ab-a087-8d69e5e8c5a9">
+    <ownedRelatedElement xsi:type="sysml:Package" xmi:id="2ec3af06-4b3d-4350-ac15-66df4cca6190" elementId="2ec3af06-4b3d-4350-ac15-66df4cca6190" declaredName="Documentation Example">
+      <ownedRelationship xsi:type="sysml:OwningMembership" xmi:id="573d8d1a-9d30-406d-ba23-4d5c7e8d82e7" elementId="573d8d1a-9d30-406d-ba23-4d5c7e8d82e7">
+        <ownedRelatedElement xsi:type="sysml:Documentation" xmi:id="216303ec-be8d-433c-9791-4f21fc7e1fab" elementId="216303ec-be8d-433c-9791-4f21fc7e1fab" body="This is documentation of the owning &#xA;package.&#xA;"/>
+      </ownedRelationship>
+      <ownedRelationship xsi:type="sysml:OwningMembership" xmi:id="a1c71f1e-ae8e-4593-9b08-d1c03a08cdbe" elementId="a1c71f1e-ae8e-4593-9b08-d1c03a08cdbe">
+        <ownedRelatedElement xsi:type="sysml:PartDefinition" xmi:id="8586ff81-7933-4728-acb7-04d3a30a723c" elementId="8586ff81-7933-4728-acb7-04d3a30a723c" declaredName="Automobile">
+          <ownedRelationship xsi:type="sysml:OwningMembership" xmi:id="7b6d164a-419c-4518-823a-37ae53f954f1" elementId="7b6d164a-419c-4518-823a-37ae53f954f1">
+            <ownedRelatedElement xsi:type="sysml:Documentation" xmi:id="0dfa07e4-35c0-4442-a6e0-99edc9bf1477" elementId="0dfa07e4-35c0-4442-a6e0-99edc9bf1477" declaredName="Document1" body="This documentation of Automobile. "/>
+          </ownedRelationship>
+        </ownedRelatedElement>
+      </ownedRelationship>
+      <ownedRelationship xsi:type="sysml:Membership" xmi:id="73c44c72-eb4f-4e31-8bbe-724fa8612569" elementId="73c44c72-eb4f-4e31-8bbe-724fa8612569" memberElement="8586ff81-7933-4728-acb7-04d3a30a723c" memberName="Car">
+        <ownedRelationship xsi:type="sysml:Annotation" xmi:id="95196679-afb7-4599-a82d-2fdf3c395de8" elementId="95196679-afb7-4599-a82d-2fdf3c395de8" annotatedElement="73c44c72-eb4f-4e31-8bbe-724fa8612569">
+          <ownedRelatedElement xsi:type="sysml:Documentation" xmi:id="735be297-0b71-470c-88c8-c95c924e9822" elementId="735be297-0b71-470c-88c8-c95c924e9822" body="This is documentation of the alias. "/>
+        </ownedRelationship>
+      </ownedRelationship>
+      <ownedRelationship xsi:type="sysml:Membership" xmi:id="235d22ea-305c-40eb-99ec-4809f6eeb5a7" elementId="235d22ea-305c-40eb-99ec-4809f6eeb5a7" memberName="Torque">
+        <memberElement xsi:type="sysml:AttributeDefinition" href="../../../../../../../../sysml-master/git/SysML-v2-Pilot-Implementation/sysml.library/Domain%20Libraries/Quantities%20and%20Units/ISQMechanics.sysmlx#065547c5-30af-5eae-8779-c9647656fe8f"/>
+      </ownedRelationship>
+    </ownedRelatedElement>
+  </ownedRelationship>
+</sysml:Namespace>

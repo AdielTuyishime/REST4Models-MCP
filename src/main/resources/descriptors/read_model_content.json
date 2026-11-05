@@ -1,0 +1,33 @@
+{
+  "$schema": "https://mde-workbench.org/schema/capability-descriptor/v1.0.0",
+  "capability_id": "read_model_content",
+  "provider": {
+    "id": "rest4models",
+    "title": "REST4Models",
+    "version": "0.11.0"
+  },
+  "category": "navigation_query",
+  "description": "Reads the content of an XMI model in the repository. Precondition: the target XMI file must exist. No side effects; returns the model content as hierarchical JSON.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "modelFileName": {
+        "type": "string",
+        "description": "Filename of the XMI model to read from the repository."
+      }
+    },
+    "required": [
+      "modelFileName"
+    ]
+  },
+  "output": {
+    "form": "report",
+    "description": "The model content rendered as hierarchical JSON."
+  },
+  "binding": {
+    "tool": "navigation_query",
+    "static_args": {
+      "capability_id": "read_model_content"
+    }
+  }
+}

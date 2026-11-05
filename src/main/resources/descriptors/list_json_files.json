@@ -1,0 +1,24 @@
+{
+  "$schema": "https://mde-workbench.org/schema/capability-descriptor/v1.0.0",
+  "capability_id": "list_json_files",
+  "provider": {
+    "id": "rest4models",
+    "title": "REST4Models",
+    "version": "0.11.0"
+  },
+  "category": "repository_utilities",
+  "description": "Lists the .json files in the repository. No preconditions; returns an empty list if no JSON files exist. No side effects.",
+  "input_schema": {
+    "type": "object"
+  },
+  "output": {
+    "form": "report",
+    "description": "Filenames of the .json files in the repository."
+  },
+  "binding": {
+    "tool": "repository_utilities",
+    "static_args": {
+      "capability_id": "list_json_files"
+    }
+  }
+}

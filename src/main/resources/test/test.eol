@@ -1,0 +1,32 @@
+operation SysML!Namespace modelContentElements() {
+    var result = Sequence{};
+
+    for (e in self.namespaceOwnedNonPackageElements()) {
+        if (not result.includes(e)) {
+            result.add(e);
+        }
+    }
+
+    for (e in self.packageOwnedElements()) {
+        if (not result.includes(e)) {
+            result.add(e);
+        }
+    }
+
+    return result;
+}
+
+operation Any structuralQualifierType() : String {
+    if (self.isKindOf(SysML!ReferenceUsage)) return "reference";
+    if (self.isKindOf(SysML!PartDefinition)) return "part def";
+    if (self.isKindOf(SysML!PartUsage)) return "part";
+    if (self.isKindOf(SysML!ItemDefinition)) return "item def";
+    if (self.isKindOf(SysML!ItemUsage)) return "item";
+    if (self.isKindOf(SysML!PortDefinition)) return "port def";
+    if (self.isKindOf(SysML!PortUsage)) return "port";
+    if (self.isKindOf(SysML!AttributeDefinition)) return "attribute def";
+    if (self.isKindOf(SysML!AttributeUsage)) return "attribute";
+    return "structural element";
+}
+
+

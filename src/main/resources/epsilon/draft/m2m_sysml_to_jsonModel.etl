@@ -1,0 +1,858 @@
+/*
+ * ============================================================
+ * SysML XMI -> JSON Model Transformation
+ * ============================================================
+ *
+ * Source metamodel : SysML
+ * Target metamodel : JSON
+ *
+ * Transformation idea:
+ * - Each selected SysML element becomes a JSON Object
+ * - Fields become JSON Members
+ * - Primitive values become StringVal / BooleanVal / NumberVal
+ * - Collections become Array
+ *
+ * Current scope:
+ * - Namespace
+ * - Package
+ * - PartDefinition / PartUsage
+ * - AttributeDefinition / AttributeUsage
+ * - ItemDefinition / ItemUsage
+ * - PortDefinition / PortUsage
+ * - ReferenceUsage
+ * - ActionDefinition / ActionUsage / PerformActionUsage
+ * - StateDefinition / StateUsage
+ * - ConnectionDefinition / ConnectionUsage
+ */
+
+
+/*
+ * ============================================================
+ * TRANSFORMATION RULES
+ * ============================================================
+ * Each rule maps one selected SysML element to one JSON Object.
+ *
+ * General pattern:
+ * - the source SysML element becomes a JSON!Object
+ * - basic metadata is exported as Members:
+ *   - type
+ *   - name
+ *   - elementId
+ * - nested contained elements are exported as Arrays of Objects
+ * - optional typing information is exported when available
+ */
+ 
+ 
+/*
+ * Map the root SysML Namespace to a JSON Object.
+ *
+ * Exported members:
+ * - type      : "Namespace"
+ * - name      : readable name of the namespace
+ * - elementId : SysML identifier of the namespace
+ * - packages  : array of top-level packages, if present
+ * - elements  : array of semantic model elements contained in the model
+ *
+ * This rule creates the entry point of the target JSON model.
+ */
+rule Namespace2Object
+	transform s : SysML!Namespace
+	to t : JSON!Object {
+
+	t.members.add(stringMember("type", "Namespace"));
+	t.members.add(stringMember("name", s.safeDeclaredName()));
+	t.members.add(stringMember("elementId", s.safeElementId()));
+
+	var pkgs := s.topLevelPackages();
+	if (not pkgs.isEmpty()) {
+		t.members.add(objectArrayMember("packages", pkgs.equivalent()));
+	}
+
+	var elems := s.modelContentElements();
+	if (not elems.isEmpty()) {
+		t.members.add(objectArrayMember("elements", elems.equivalent()));
+	}
+}
+
+/*
+ * Map a SysML Package to a JSON Object.
+ *
+ * Exported members:
+ * - type      : "Package"
+ * - name      : package name
+ * - elementId : package identifier
+ * - packages  : nested packages, if present
+ * - elements  : non-package semantic elements directly owned by the package
+ *
+ * This rule preserves the package hierarchy in the target JSON model.
+ */
+rule Package2Object
+	transform s : SysML!Package
+	to t : JSON!Object {
+
+	t.members.add(stringMember("type", "Package"));
+	t.members.add(stringMember("name", s.safeDeclaredName()));
+	t.members.add(stringMember("elementId", s.safeElementId()));
+
+	var nestedPkgs := s.nestedPackages();
+	if (not nestedPkgs.isEmpty()) {
+		t.members.add(objectArrayMember("packages", nestedPkgs.equivalent()));
+	}
+
+	var elems := s.directOwnedElements().select(e | not e.isKindOf(SysML!Package));
+	if (not elems.isEmpty()) {
+		t.members.add(objectArrayMember("elements", elems.equivalent()));
+	}
+}
+
+/*
+ * Map a SysML PartDefinition to a JSON Object.
+ *
+ * Exported members:
+ * - type      : "PartDefinition"
+ * - name      : part definition name
+ * - elementId : SysML identifier
+ * - features  : structural child members such as parts, attributes, ports, references
+ *
+ * Example:
+ * PartDefinition Vehicle -> JSON Object with its owned structural features.
+ */
+rule PartDefinition2Object
+	transform s : SysML!PartDefinition
+	to t : JSON!Object {
+
+	t.members.add(stringMember("type", "PartDefinition"));
+	t.members.add(stringMember("name", s.safeDeclaredName()));
+	t.members.add(stringMember("elementId", s.safeElementId()));
+
+	var features := s.ownedStructuralMembers();
+	if (not features.isEmpty()) {
+		t.members.add(objectArrayMember("features", features.equivalent()));
+	}
+}
+
+/*
+ * Map a SysML PartUsage to a JSON Object.
+ *
+ * Exported members:
+ * - type        : "PartUsage"
+ * - name        : part usage name
+ * - elementId   : SysML identifier
+ * - typeRefName : referenced type name, if available
+ * - typeRefId   : referenced type identifier, if available
+ * - typeRefUri  : referenced type proxy URI, if unresolved
+ * - features    : nested structural child members, if present
+ *
+ * This rule preserves both the usage itself and the type it points to.
+ */
+rule PartUsage2Object
+	transform s : SysML!PartUsage
+	to t : JSON!Object {
+
+	t.members.add(stringMember("type", "PartUsage"));
+	t.members.add(stringMember("name", s.safeDeclaredName()));
+	t.members.add(stringMember("elementId", s.safeElementId()));
+
+	if (s.hasTypingRelationship()) {
+		t.members.add(stringMember("typeRefName", s.relationshipTypeRefName()));
+		t.members.add(stringMember("typeRefId", s.relationshipTypeRefId()));
+		t.members.add(stringMember("typeRefUri", s.relationshipTypeRefUri()));
+	}
+
+	var features := s.ownedStructuralMembers();
+	if (not features.isEmpty()) {
+		t.members.add(objectArrayMember("features", features.equivalent()));
+	}
+}
+
+/*
+ * Map a SysML AttributeDefinition to a JSON Object.
+ *
+ * Exported members:
+ * - type      : "AttributeDefinition"
+ * - name      : attribute definition name
+ * - elementId : SysML identifier
+ * - features  : nested structural members, if present
+ *
+ * This is useful when attribute definitions own additional nested elements.
+ */
+rule AttributeDefinition2Object
+	transform s : SysML!AttributeDefinition
+	to t : JSON!Object {
+
+	t.members.add(stringMember("type", "AttributeDefinition"));
+	t.members.add(stringMember("name", s.safeDeclaredName()));
+	t.members.add(stringMember("elementId", s.safeElementId()));
+
+	var features := s.ownedStructuralMembers();
+	if (not features.isEmpty()) {
+		t.members.add(objectArrayMember("features", features.equivalent()));
+	}
+}
+
+/*
+ * Map a SysML AttributeUsage to a JSON Object.
+ *
+ * Exported members:
+ * - type        : "AttributeUsage"
+ * - name        : attribute usage name
+ * - elementId   : SysML identifier
+ * - isComposite : boolean value, if defined
+ * - typeRefName : referenced type name, if available
+ * - typeRefId   : referenced type identifier, if available
+ * - typeRefUri  : referenced type proxy URI, if unresolved
+ *
+ * This rule captures both the usage metadata and its typing information.
+ */
+rule AttributeUsage2Object
+	transform s : SysML!AttributeUsage
+	to t : JSON!Object {
+
+	t.members.add(stringMember("type", "AttributeUsage"));
+	t.members.add(stringMember("name", s.safeDeclaredName()));
+	t.members.add(stringMember("elementId", s.safeElementId()));
+
+	if (s.hasProperty("isComposite") and not s.isComposite.isUndefined()) {
+		t.members.add(booleanMember("isComposite", s.isComposite));
+	}
+
+	if (s.hasTypingRelationship()) {
+		t.members.add(stringMember("typeRefName", s.relationshipTypeRefName()));
+		t.members.add(stringMember("typeRefId", s.relationshipTypeRefId()));
+		t.members.add(stringMember("typeRefUri", s.relationshipTypeRefUri()));
+	}
+}
+
+/*
+ * Map a SysML ItemDefinition to a JSON Object.
+ *
+ * Exported members:
+ * - type      : "ItemDefinition"
+ * - name      : item definition name
+ * - elementId : SysML identifier
+ * - features  : nested structural members, if present
+ */
+rule ItemDefinition2Object
+	transform s : SysML!ItemDefinition
+	to t : JSON!Object {
+
+	t.members.add(stringMember("type", "ItemDefinition"));
+	t.members.add(stringMember("name", s.safeDeclaredName()));
+	t.members.add(stringMember("elementId", s.safeElementId()));
+
+	var features := s.ownedStructuralMembers();
+	if (not features.isEmpty()) {
+		t.members.add(objectArrayMember("features", features.equivalent()));
+	}
+}
+
+/*
+ * Map a SysML ItemUsage to a JSON Object.
+ *
+ * Exported members:
+ * - type        : "ItemUsage"
+ * - name        : item usage name
+ * - elementId   : SysML identifier
+ * - typeRefName : referenced type name, if available
+ * - typeRefId   : referenced type identifier, if available
+ * - typeRefUri  : referenced type proxy URI, if unresolved
+ * - features    : nested structural members, if present
+ */
+rule ItemUsage2Object
+	transform s : SysML!ItemUsage
+	to t : JSON!Object {
+
+	t.members.add(stringMember("type", "ItemUsage"));
+	t.members.add(stringMember("name", s.safeDeclaredName()));
+	t.members.add(stringMember("elementId", s.safeElementId()));
+
+	if (s.hasTypingRelationship()) {
+		t.members.add(stringMember("typeRefName", s.relationshipTypeRefName()));
+		t.members.add(stringMember("typeRefId", s.relationshipTypeRefId()));
+		t.members.add(stringMember("typeRefUri", s.relationshipTypeRefUri()));
+	}
+
+	var features := s.ownedStructuralMembers();
+	if (not features.isEmpty()) {
+		t.members.add(objectArrayMember("features", features.equivalent()));
+	}
+}
+
+/*
+ * Map a SysML PortDefinition to a JSON Object.
+ *
+ * Exported members:
+ * - type      : "PortDefinition"
+ * - name      : port definition name
+ * - elementId : SysML identifier
+ * - features  : nested structural members, if present
+ */
+rule PortDefinition2Object
+	transform s : SysML!PortDefinition
+	to t : JSON!Object {
+
+	t.members.add(stringMember("type", "PortDefinition"));
+	t.members.add(stringMember("name", s.safeDeclaredName()));
+	t.members.add(stringMember("elementId", s.safeElementId()));
+
+	var features := s.ownedStructuralMembers();
+	if (not features.isEmpty()) {
+		t.members.add(objectArrayMember("features", features.equivalent()));
+	}
+}
+
+/*
+ * Map a SysML PortUsage to a JSON Object.
+ *
+ * Exported members:
+ * - type        : "PortUsage"
+ * - name        : port usage name
+ * - elementId   : SysML identifier
+ * - typeRefName : referenced type name, if available
+ * - typeRefId   : referenced type identifier, if available
+ * - typeRefUri  : referenced type proxy URI, if unresolved
+ * - features    : nested structural members, if present
+ */
+rule PortUsage2Object
+	transform s : SysML!PortUsage
+	to t : JSON!Object {
+
+	t.members.add(stringMember("type", "PortUsage"));
+	t.members.add(stringMember("name", s.safeDeclaredName()));
+	t.members.add(stringMember("elementId", s.safeElementId()));
+
+	if (s.hasTypingRelationship()) {
+		t.members.add(stringMember("typeRefName", s.relationshipTypeRefName()));
+		t.members.add(stringMember("typeRefId", s.relationshipTypeRefId()));
+		t.members.add(stringMember("typeRefUri", s.relationshipTypeRefUri()));
+	}
+
+	var features := s.ownedStructuralMembers();
+	if (not features.isEmpty()) {
+		t.members.add(objectArrayMember("features", features.equivalent()));
+	}
+}
+
+/*
+ * Map a SysML ReferenceUsage to a JSON Object.
+ *
+ * Exported members:
+ * - type      : "ReferenceUsage"
+ * - name      : reference usage name
+ * - elementId : SysML identifier
+ *
+ * This is a compact rule because reference usages are currently exported
+ * only with their core metadata.
+ */
+rule ReferenceUsage2Object
+	transform s : SysML!ReferenceUsage
+	to t : JSON!Object {
+
+	t.members.add(stringMember("type", "ReferenceUsage"));
+	t.members.add(stringMember("name", s.safeDeclaredName()));
+	t.members.add(stringMember("elementId", s.safeElementId()));
+}
+
+/*
+ * Map a SysML ActionDefinition to a JSON Object.
+ *
+ * Exported members:
+ * - type      : "ActionDefinition"
+ * - name      : action definition name
+ * - elementId : SysML identifier
+ * - features  : nested behavioral members, if present
+ *
+ * This rule captures the behavioral structure of action definitions.
+ */
+rule ActionDefinition2Object
+	transform s : SysML!ActionDefinition
+	to t : JSON!Object {
+
+	t.members.add(stringMember("type", "ActionDefinition"));
+	t.members.add(stringMember("name", s.safeDeclaredName()));
+	t.members.add(stringMember("elementId", s.safeElementId()));
+
+	var features := s.ownedBehavioralMembers();
+	if (not features.isEmpty()) {
+		t.members.add(objectArrayMember("features", features.equivalent()));
+	}
+}
+
+/*
+ * Map a SysML ActionUsage to a JSON Object.
+ *
+ * Exported members:
+ * - type      : "ActionUsage"
+ * - name      : action usage name
+ * - elementId : SysML identifier
+ */
+rule ActionUsage2Object
+	transform s : SysML!ActionUsage
+	to t : JSON!Object {
+
+	t.members.add(stringMember("type", "ActionUsage"));
+	t.members.add(stringMember("name", s.safeDeclaredName()));
+	t.members.add(stringMember("elementId", s.safeElementId()));
+}
+
+/*
+ * Map a SysML PerformActionUsage to a JSON Object.
+ *
+ * Exported members:
+ * - type      : "PerformActionUsage"
+ * - name      : perform-action usage name
+ * - elementId : SysML identifier
+ */
+rule PerformActionUsage2Object
+	transform s : SysML!PerformActionUsage
+	to t : JSON!Object {
+
+	t.members.add(stringMember("type", "PerformActionUsage"));
+	t.members.add(stringMember("name", s.safeDeclaredName()));
+	t.members.add(stringMember("elementId", s.safeElementId()));
+}
+
+/*
+ * Map a SysML StateDefinition to a JSON Object.
+ *
+ * Exported members:
+ * - type      : "StateDefinition"
+ * - name      : state definition name
+ * - elementId : SysML identifier
+ * - features  : nested behavioral members, if present
+ */
+rule StateDefinition2Object
+	transform s : SysML!StateDefinition
+	to t : JSON!Object {
+
+	t.members.add(stringMember("type", "StateDefinition"));
+	t.members.add(stringMember("name", s.safeDeclaredName()));
+	t.members.add(stringMember("elementId", s.safeElementId()));
+
+	var features := s.ownedBehavioralMembers();
+	if (not features.isEmpty()) {
+		t.members.add(objectArrayMember("features", features.equivalent()));
+	}
+}
+
+/*
+ * Map a SysML StateUsage to a JSON Object.
+ *
+ * Exported members:
+ * - type      : "StateUsage"
+ * - name      : state usage name
+ * - elementId : SysML identifier
+ */
+rule StateUsage2Object
+	transform s : SysML!StateUsage
+	to t : JSON!Object {
+
+	t.members.add(stringMember("type", "StateUsage"));
+	t.members.add(stringMember("name", s.safeDeclaredName()));
+	t.members.add(stringMember("elementId", s.safeElementId()));
+}
+
+/*
+ * Map a SysML ConnectionDefinition to a JSON Object.
+ *
+ * Exported members:
+ * - type      : "ConnectionDefinition"
+ * - name      : connection definition name
+ * - elementId : SysML identifier
+ *
+ * This rule currently exports only the core metadata of the connection.
+ */
+rule ConnectionDefinition2Object
+	transform s : SysML!ConnectionDefinition
+	to t : JSON!Object {
+
+	t.members.add(stringMember("type", "ConnectionDefinition"));
+	t.members.add(stringMember("name", s.safeDeclaredName()));
+	t.members.add(stringMember("elementId", s.safeElementId()));
+}
+
+/*
+ * Map a SysML ConnectionUsage to a JSON Object.
+ *
+ * Exported members:
+ * - type      : "ConnectionUsage"
+ * - name      : connection usage name
+ * - elementId : SysML identifier
+ *
+ * This rule currently exports only the core metadata of the connection usage.
+ */
+rule ConnectionUsage2Object
+	transform s : SysML!ConnectionUsage
+	to t : JSON!Object {
+
+	t.members.add(stringMember("type", "ConnectionUsage"));
+	t.members.add(stringMember("name", s.safeDeclaredName()));
+	t.members.add(stringMember("elementId", s.safeElementId()));
+}
+
+
+/*
+ * ============================================================
+ * COMMON HELPER OPERATIONS
+ * ============================================================
+ */
+
+/*
+ * Return the best readable name for a SysML element.
+ */
+operation Any safeDeclaredName() : String {
+	if (self.hasProperty("declaredName") and not self.declaredName.isUndefined()) {
+		return self.declaredName;
+	}
+	if (self.hasProperty("name") and not self.name.isUndefined()) {
+		return self.name;
+	}
+	return "";
+}
+
+/*
+ * Return elementId if present.
+ */
+operation Any safeElementId() : String {
+	if (self.hasProperty("elementId") and not self.elementId.isUndefined()) {
+		return self.elementId;
+	}
+	return "";
+}
+
+/*
+ * Safely return ownedRelationship.
+ */
+operation Any ownedRelationshipsSafe() {
+	if (self.hasProperty("ownedRelationship") and not self.ownedRelationship.isUndefined()) {
+		return self.ownedRelationship;
+	}
+	return Sequence{};
+}
+
+/*
+ * Safely return ownedRelatedElement from a relationship.
+ */
+operation Any relatedElementsSafe() {
+	if (self.hasProperty("ownedRelatedElement") and not self.ownedRelatedElement.isUndefined()) {
+		if (self.ownedRelatedElement.isKindOf(Collection)) {
+			return self.ownedRelatedElement;
+		}
+		return Sequence { self.ownedRelatedElement };
+	}
+	return Sequence{};
+}
+
+/*
+ * Collect semantic child elements through:
+ * ownedRelationship -> ownedRelatedElement
+ */
+operation Any directOwnedElements() {
+	var result = Sequence{};
+	for (rel in self.ownedRelationshipsSafe()) {
+		for (elem in rel.relatedElementsSafe()) {
+			result.add(elem);
+		}
+	}
+	return result;
+}
+
+/*
+ * Return direct semantic elements under the Namespace.
+ */
+operation SysML!Namespace topLevelOwnedElements() {
+	return self.directOwnedElements();
+}
+
+/*
+ * Return top-level packages.
+ */
+operation SysML!Namespace topLevelPackages() {
+	return self.topLevelOwnedElements().select(e | e.isKindOf(SysML!Package));
+}
+
+/*
+ * Return direct nested packages of a Package.
+ */
+operation SysML!Package nestedPackages() {
+	return self.directOwnedElements().select(e | e.isKindOf(SysML!Package));
+}
+
+/*
+ * Return all nested packages recursively, including the current package.
+ */
+operation SysML!Package allPackagesRecursively() {
+	var result = Sequence{self};
+
+	for (p in self.nestedPackages()) {
+		for (child in p.allPackagesRecursively()) {
+			if (not result.includes(child)) {
+				result.add(child);
+			}
+		}
+	}
+
+	return result;
+}
+
+/*
+ * Return all packages reachable from the Namespace.
+ */
+operation SysML!Namespace allPackagesRecursively() {
+	var result = Sequence{};
+
+	for (pkg in self.topLevelPackages()) {
+		for (p in pkg.allPackagesRecursively()) {
+			if (not result.includes(p)) {
+				result.add(p);
+			}
+		}
+	}
+
+	return result;
+}
+
+/*
+ * Return semantic elements directly owned by all reachable packages.
+ */
+operation SysML!Namespace packageOwnedElements() {
+	var result = Sequence{};
+
+	for (pkg in self.allPackagesRecursively()) {
+		for (e in pkg.directOwnedElements()) {
+			if (not result.includes(e)) {
+				result.add(e);
+			}
+		}
+	}
+
+	return result;
+}
+
+/*
+ * Return direct non-package elements under the Namespace.
+ */
+operation SysML!Namespace namespaceOwnedNonPackageElements() {
+	return self.topLevelOwnedElements().select(e | not e.isKindOf(SysML!Package));
+}
+
+/*
+ * Return the main semantic content of the model.
+ * Merges:
+ * - direct non-package Namespace elements
+ * - elements inside nested packages
+ */
+operation SysML!Namespace modelContentElements() {
+	var result = Sequence{};
+
+	for (e in self.namespaceOwnedNonPackageElements()) {
+		if (not result.includes(e)) {
+			result.add(e);
+		}
+	}
+
+	for (e in self.packageOwnedElements()) {
+		if (not result.includes(e)) {
+			result.add(e);
+		}
+	}
+
+	return result;
+}
+
+
+/*
+ * ============================================================
+ * STRUCTURAL HELPERS
+ * ============================================================
+ */
+
+/*
+ * Return direct structural child members/usages.
+ */
+operation Any ownedStructuralMembers() {
+	return self.directOwnedElements().select(e |
+		e.isKindOf(SysML!AttributeUsage) or
+		e.isKindOf(SysML!PartUsage) or
+		e.isKindOf(SysML!ItemUsage) or
+		e.isKindOf(SysML!PortUsage) or
+		e.isKindOf(SysML!ReferenceUsage)
+	);
+}
+
+
+/*
+ * ============================================================
+ * BEHAVIORAL HELPERS
+ * ============================================================
+ */
+
+/*
+ * Return direct behavioral child members.
+ */
+operation Any ownedBehavioralMembers() {
+	return self.directOwnedElements().select(e |
+		e.isKindOf(SysML!PerformActionUsage) or
+		e.isKindOf(SysML!ActionUsage) or
+		e.isKindOf(SysML!StateUsage)
+	);
+}
+
+
+/*
+ * ============================================================
+ * RELATIONSHIP HELPERS
+ * ============================================================
+ */
+
+/*
+ * Return FeatureTyping relationships.
+ */
+operation Any typingRelationships() {
+	return self.ownedRelationshipsSafe().select(r | r.eClass().name = "FeatureTyping");
+}
+
+/*
+ * Check whether the element has typing relationships.
+ */
+operation Any hasTypingRelationship() : Boolean {
+	return not self.typingRelationships().isEmpty();
+}
+
+/*
+ * Resolve the type target from the first FeatureTyping relationship.
+ */
+operation Any typeTarget() {
+	var typings = self.typingRelationships();
+	if (typings.isEmpty()) return null;
+
+	var typing = typings.first();
+
+	if (typing.hasProperty("type") and not typing.type.isUndefined()) {
+		return typing.type;
+	}
+
+	return null;
+}
+
+/*
+ * Return referenced type declared name.
+ */
+operation Any relationshipTypeRefName() : String {
+	var target = self.typeTarget();
+	if (target.isUndefined()) return "";
+
+	if (target.hasProperty("declaredName") and not target.declaredName.isUndefined()) {
+		return target.declaredName;
+	}
+
+	return "";
+}
+
+/*
+ * Return referenced type elementId.
+ */
+operation Any relationshipTypeRefId() : String {
+	var target = self.typeTarget();
+	if (target.isUndefined()) return "";
+
+	if (target.hasProperty("elementId") and not target.elementId.isUndefined()) {
+		return target.elementId;
+	}
+
+	return "";
+}
+
+/*
+ * Return referenced type proxy URI when unresolved.
+ */
+operation Any relationshipTypeRefUri() : String {
+	var target = self.typeTarget();
+	if (target.isUndefined()) return "";
+
+	if (target.eIsProxy()) {
+		return target.eProxyURI().toString();
+	}
+
+	return "";
+}
+
+
+/*
+ * ============================================================
+ * JSON MODEL CONSTRUCTION HELPERS
+ * ============================================================
+ */
+
+/*
+ * Build a JSON object member whose value is a StringVal.
+ */
+operation stringMember(key : String, val : String) : JSON!Member {
+	var m = new JSON!Member;
+	m.key = key;
+
+	var v = new JSON!StringVal;
+	v.stringValue = val;
+
+	m.value = v;
+	return m;
+}
+
+/*
+ * Build a JSON object member whose value is a BooleanVal.
+ */
+operation booleanMember(key : String, val : Boolean) : JSON!Member {
+	var m = new JSON!Member;
+	m.key = key;
+
+	var v = new JSON!BooleanVal;
+	v.booleanValue = val;
+
+	m.value = v;
+	return m;
+}
+
+/*
+ * Build a JSON object member whose value is a NumberVal.
+ * Adjust the cast if your NumberVal uses a different datatype.
+ */
+operation numberMember(key : String, val : Real) : JSON!Member {
+	var m = new JSON!Member;
+	m.key = key;
+
+	var v = new JSON!NumberVal;
+	v.numberValue = val;
+
+	m.value = v;
+	return m;
+}
+
+/*
+ * Build a JSON object member whose value is Null.
+ */
+operation nullMember(key : String) : JSON!Member {
+	var m = new JSON!Member;
+	m.key = key;
+
+	var v = new JSON!Null;
+	m.value = v;
+
+	return m;
+}
+
+/*
+ * Build a JSON object member whose value is an Array
+ * containing target JSON objects.
+ */
+operation objectArrayMember(key : String, elems : Collection) : JSON!Member {
+	var m = new JSON!Member;
+	m.key = key;
+
+	var arr = new JSON!Array;
+	for (e in elems) {
+		arr.values.add(e);
+	}
+
+	m.value = arr;
+	return m;
+}
