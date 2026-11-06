@@ -6,120 +6,128 @@
 
 Model-Driven Engineering · Eclipse EMF/Ecore · XMI · Spring Boot · REST · MCP
 
-[Overview](#overview) · [Capabilities](#capabilities) · [Quick Start](#quick-start) · [REST APIs](#rest-apis) · [MCP Server](#mcp-server) · [Examples](#examples) 
+[Overview](#overview) · [Capabilities](#capabilities) · [Quick Start](#quick-start) · [REST APIs](#rest-apis) · [MCP Server](#mcp-server) · [Example](#example-model-discovery) 
 
 </div>
 
 ## Overview
 
-**REST4Models** is a Model-Driven Engineering (MDE) tool that dynamically exposes Eclipse EMF/Ecore metamodels and XMI models through REST APIs. Leveraging **EMF reflection**, it enables external applications to discover, query, validate, and modify model elements without directly manipulating the underlying files, supporting a **Modeling-as-a-Service** approach.
+**REST4Models** is a Model-Driven Engineering (MDE) tool that dynamically provisions REST APIs for model management. It exposes metamodels and models through RESTful services, enabling external applications to discover, query, validate, and modify model elements.
 
-REST4Models also integrates a **Model Context Protocol (MCP) server** that exposes supported model-management operations as tools for MCP-compatible AI agents and clients. This enables natural-language interaction with models and integration into AI-assisted workflows.
-
+REST4Models also integrates a **Model Context Protocol (MCP) server** that exposes model-management operations as tools to AI assistants, enabling users to interact with and manage models through natural-language requests.
 
 ## Capabilities
 
 | Capability | Description |
 | --- | --- |
-| **Model and metamodel discovery** | Discover registered Ecore packages, classes, and XMI models. |
-| **Model and metamodel management** | Create, query, update, and delete supported model elements and Ecore structures. |
-| **Repository-wide querying** | Search for model instances across registered models or within a selected XMI file. |
+| **Model and metamodel discovery** | Discover registered metamodels (.ecore), their structural elements, and associated XMI models (.xmi). |
+| **Model and metamodel management** | Create, query, update, and delete model elements and metamodel structures. |
+| **Repository-wide querying** | Search for model instances across registered models or within a specific model. |
 | **Model validation** | Check model conformance and report validation issues. |
-| **Model-to-model transformation (M2M)** | Transform source models into target models conforming to supported metamodels, where a transformation is configured. |
-| **Model-to-text transformation (M2T)** | Generate supported text artifacts or source code from models, where configured. |
-| **Model analysis** | Evaluate supported quality metrics and produce analysis results or reports, when available. |
-| **REST and MCP access** | Access model operations over HTTP/JSON or as MCP tools for compatible clients. |
-
-> **Scope note:** The table describes REST4Models capabilities across its development. Not every operation is necessarily exposed in this paper-specific release. Use the running REST API documentation and the MCP client's discovered tools to determine what the checked-out version actually supports.
+| **Model-to-model transformation (M2M)** | Transform source models into target models conforming to the same or different metamodels. |
+| **Model-to-text transformation (M2T)** | Generate text artifacts or source code from models. |
+| **Model analysis** | Evaluate models using quality metrics and generate analysis reports. |
+| **REST and MCP access** | Expose model-management operations through REST APIs and MCP tools, enabling integration with external applications and AI agents. |
 
 ## Quick Start
 
 ### Prerequisites
 
-- **Java 17** (or the version configured in `pom.xml`).
-- **Maven**, or the included Maven Wrapper (`mvnw` / `mvnw.cmd`).
-- A directory with `.ecore` and `.xmi` files. Use public or synthetic sample models for experiments.
+- **Java 17 or later**.
+- **Git** (to clone the GitHub repository).
 
-### 1. Clone and build
+The project includes the Maven Wrapper, so a separate Maven installation is not required.
+
+> Note: REST4Models includes sample metamodels (.ecore) and models (.xmi), so no additional model repository configuration is required when running the application from the project root.
+
+### Run the Application
+
+**1. Clone the GitHub repository**
+
+Clone the repository and navigate to the project directory:
 
 ```bash
-git clone <REPOSITORY_URL>
+git clone https://github.com/AdielTuyishime/REST4Models-MCP.git
 cd REST4Models-MCP
 ```
 
-Build on Linux/macOS:
+**2. Start the application**
 
-```bash
-./mvnw clean package
-```
+Use the included Maven Wrapper to start REST4Models.
 
-Or on Windows PowerShell:
+**Windows (PowerShell):**
 
 ```powershell
-.\mvnw.cmd clean package
+.\mvnw.cmd spring-boot:run
 ```
 
-### 2. Configure the model repository
-
-By default, REST4Models scans:
-
-```text
-src/main/resources/repository
-```
-
-The default is a **relative filesystem path** resolved from the application's working directory. When launching from the project root and using that folder, no additional environment configuration is needed.
-
-Alternatively, set `REPOSITORY_DIR` to an absolute path containing your `.ecore` and `.xmi` files.
-
-Linux/macOS:
-
-```bash
-export REPOSITORY_DIR="/absolute/path/to/repository"
-```
-
-Windows PowerShell:
-
-```powershell
-$env:REPOSITORY_DIR = "C:\path\to\repository"
-```
-
-A custom repository is optional. If you have previously set `REPOSITORY_DIR`, its value takes precedence over the default.
-
-### 3. Run the REST application
-
-From the project root:
+**Linux / macOS:**
 
 ```bash
 ./mvnw spring-boot:run
 ```
 
-On Windows, use `./mvnw.cmd spring-boot:run` or `.\mvnw.cmd spring-boot:run` in PowerShell.
+**3. Access the application**
 
-The REST application normally runs at `http://localhost:8080`. If Swagger UI is enabled in the selected profile, open:
+Once the application starts, the REST APIs are available at:
 
-**http://localhost:8080/swagger-ui/index.html**
+- **Base URL:** http://localhost:8080
+- **Swagger UI:** http://localhost:8080/swagger-ui/index.html
+
+By default, REST4Models automatically discovers Ecore metamodels (`.ecore`) and XMI models (`.xmi`) from `src/main/resources/repository`.
 
 ## REST APIs
 
-REST4Models provides endpoints for discovering and managing EMF/Ecore metamodels and XMI models.
+REST4Models provides REST endpoints for discovering and managing EMF/Ecore metamodels and XMI models.
 
-For example, to list the registered metamodel packages:
+For example, to list the registered metamodels and their associated models:
+
+**Using a web browser:**
+
+[http://localhost:8080/api/v1/repository/list](http://localhost:8080/api/v1/repository/list)
+
+**Using the command line:**
 
 ```bash
-curl http://localhost:8080/api/v1/metamodels
+curl http://localhost:8080/api/v1/repository/list
 ```
 
-Available endpoints and their request parameters are documented by the running application's OpenAPI/Swagger interface, when enabled.
+For the complete list of available endpoints and their parameters, refer to the [Swagger UI](http://localhost:8080/swagger-ui/index.html).
+
+> **Note:** The endpoint URLs are accessible when REST4Models is running locally on port `8080`.
+
 
 ## MCP Server
 
-REST4Models includes an MCP server for clients that support the **Model Context Protocol**. The STDIO mode allows a compatible client to launch REST4Models as a local process and discover its available model-management tools.
+REST4Models integrates a **Model Context Protocol (MCP) server** that exposes model-management operations as tools to MCP-compatible AI assistants and clients, enabling natural-language interaction with metamodels and models.
 
-### Build and configure STDIO
+### 1. Build the MCP Server
 
-Build the application as described above, then identify the generated JAR in `target/`.
+Generate the executable JAR using the included Maven Wrapper.
 
-The following example shows the structure of a typical MCP client configuration. **Replace the JAR path and filename with the actual build output.**
+**Windows (PowerShell):**
+
+```powershell
+.\mvnw.cmd clean package
+```
+
+**Linux / macOS:**
+
+```bash
+./mvnw clean package
+```
+
+The generated JAR is located in the `target/` directory.
+
+### 2. Configure an MCP Client
+
+REST4Models supports MCP integration through the **STDIO transport**, allowing compatible AI assistants and development environments to launch the server and invoke its tools.
+
+The configuration format depends on the MCP client.
+
+#### Example: Claude Desktop (STDIO)
+
+Add the following configuration to your Claude Desktop MCP configuration file:
 
 ```json
 {
@@ -129,7 +137,7 @@ The following example shows the structure of a typical MCP client configuration.
       "args": [
         "-Dspring.main.banner-mode=off",
         "-jar",
-        "/absolute/path/to/REST4Models-MCP.jar",
+        "/absolute/path/to/REST4Models1.0-0.11.0.jar",
         "--spring.profiles.active=mcp-stdio"
       ],
       "env": {
@@ -139,31 +147,23 @@ The following example shows the structure of a typical MCP client configuration.
   }
 }
 ```
+Replace the JAR and model repository "REPOSITORY_DIR" paths with their absolute locations on your machine. The `REPOSITORY_DIR` variable points to the directory containing the Ecore metamodels and XMI models.
 
-The `env` entry makes the repository location explicit when the MCP client launches the application. If omitted, the default relative path will be resolved from the MCP server process's working directory, which might not be the project root.
+> **Note:** Other MCP-compatible clients may require different configuration formats. Refer to the documentation of your preferred client for instructions on connecting a local STDIO MCP server.
 
-**STDIO requirement:** Protocol messages use standard output. Ordinary application logs and startup messages must not be written to standard output, or they may interfere with MCP communication.
+### 3. Connect and Interact
 
-Restart or reconnect the MCP client after changing its configuration.
+Restart or reconnect the MCP client after saving the configuration. Once connected, the client can discover the available REST4Models tools.
 
-### Available MCP operations
 
-Examples of operations exposed by REST4Models builds include:
+### Example: Model Discovery
 
-| Category | Example tool or operation |
-| --- | --- |
-| Discover metamodels | `list_packages_with_models` |
-| Read model content | `read_model_content`|
-| List model instances | `list_instances` / `get_instances_in_model` |
-| Create a metamodel class | `create_class` |
-| Add an attribute | `add_attribute` |
-| Model transformation | `m2m_sysml_model_to_json_model`|
-| Model analysis | `model_analysis` |
+Once REST4Models is connected to Claude Desktop via MCP, users can discover the metamodels and models available in the configured model repository through natural-language requests.
 
-> 
-## Examples
+**Example prompt:**
 
-Once an MCP-compatible assistant is connected, try requests such as:
+> List all the registered metamodels and their associated models in the repository.
 
-- “Show me the metamodels and models available in the repository.”
-- “Transform `VehicleDefinitions.xmi` into a JSON model”
+Claude Desktop invokes the appropriate MCP tool to retrieve the registered Ecore metamodels and their associated XMI models.
+
+> **Note:** The returned metamodels and models depend on the contents of the configured model repository.
